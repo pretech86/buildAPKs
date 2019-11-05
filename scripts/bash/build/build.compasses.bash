@@ -39,5 +39,5 @@ trap _SCOTRPQUIT_ QUIT
 
 export JAD=github.com/BuildAPKs/buildAPKs.compasses
 export JID=compasses # job id/name
-. "$HOME/buildAPKs/scripts/bash/init/init.bash"
+. "$HOME/buildAPKs/scripts/bash/init/init.bash" "$@"
 # build.compasses.bash EOF

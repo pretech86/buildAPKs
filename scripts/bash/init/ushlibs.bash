@@ -58,6 +58,7 @@ _UFSHLIBS_() { # add and update submodules
 	do
 		if grep "${ARSHLIBS[$MLOC]}" .gitmodules 1>/dev/null  
 		then
+		rm -f scripts/$MLOC/.git
  		printf "\\e[1;7;38;5;96mUpdating ~/%s/scripts/%s...\\e[0m\\n" "${RDR##*/}" "$MLOC" ; git submodule update --recursive --remote scripts/$MLOC || printf "Cannot update module ~/%s/scripts/%s: Continuing...\\n" "${RDR##*/}" "$MLOC"
 		fi
 	done

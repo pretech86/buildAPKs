@@ -36,6 +36,5 @@ trap _SETRPQUIT_ QUIT
 
 export JAD=github.com/sdrausty/buildAPKsTop10
 export JID=top10 # job id/name
-. "$HOME/buildAPKs/scripts/bash/init/init.bash"
-
-#EOF
+. "$HOME/buildAPKs/scripts/bash/init/init.bash" "$@"
+# build.top10.bash EOF

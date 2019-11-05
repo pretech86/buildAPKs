@@ -36,5 +36,5 @@ trap _SETRPQUIT_ QUIT
 
 export JAD=github.com/BuildAPKs/buildAPKs.samples 
 export JID="samps" # job id/name
-. "$HOME/buildAPKs/scripts/bash/init/init.bash"
+. "$HOME/buildAPKs/scripts/bash/init/init.bash" "$@"
 # build.samples.bash EOF

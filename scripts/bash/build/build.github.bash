@@ -31,9 +31,9 @@ _ATT_ () {
 			then
 				if [[ "$OAUT" != "" ]] # see $RDR/.conf/GAUTH file 
 				then
-					ISAND="$(curl -u "$OAUT" -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1" -s 2>&1 | head -1024)" || _SIGNAL_ "420" "_ATT_ ISAND"
+					ISAND="$(curl -u "$OAUT" -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1" -s 2>&1 | head -1024)" ||:
 				else
- 					ISAND="$(curl -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1" -s 2>&1 | head -1024)" ||  _SIGNAL_ "202" "_ATT_ ISAND"
+ 					ISAND="$(curl -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1" -s 2>&1 | head -1024)" ||:
 				fi
 			 	if grep AndroidManifest.xml <<< "$ISAND" 
 				then
@@ -67,6 +67,7 @@ _BUILDAPKS_ () { # https://developer.github.com/v3/repos/commits/
 }
 
 _CKAT_ () {
+	_MKJDC_ 
 	CK=0
 	REPO=$(awk -F/ '{print $NF}' <<< "$NAME") # https://stackoverflow.com/questions/2559076/how-do-i-redirect-output-to-a-variable-in-shell 
 	NPCK="$(find "$JDR/var/conf/" -name "$USER.${NAME##*/}.???????.ck")" ||: # https://stackoverflow.com/questions/6363441/check-if-a-file-exists-with-wildcard-in-shell-script
@@ -110,13 +111,13 @@ _CUTE_ () { # checks if USENAME is found in GNAMES and if it is an organization 
 			printf "\\n%s\\n\\n" "Could not find a GitHub login with $USENAME:  Exiting..."
 			exit 44
 		fi
-		if [[ -z "${TYPE[17]}" ]]
+		(if [[ -z "${TYPE[17]}" ]] 
 		then
-			_SIGNAL_ "404" "${TYPE[17]} undefined!"
+			_SIGNAL_ "71" "${TYPE[17]} undefined!" "71"
 			exit 34
-		fi
+		fi) || (_SIGNAL_ "72" "TYPE[17]: unbound variable" "72")
 		USENAME="$(printf "%s" "${TYPE[1]}" | sed 's/"//g' | sed 's/,//g' | awk '{print $2}')" || _SIGNAL_ "73" "_CUTE_ \$USENAME"
-		NAPKS="$(printf "%s" "${TYPE[17]}" | sed 's/"//g' | sed 's/,//g' | awk '{print $2}')" || (_SIGNAL_ "74" "_CUTE_ \$NAPKS: create \$NAPKS failed; Exiting..." && exit 24)
+		NAPKS="$(printf "%s" "${TYPE[17]}" | sed 's/"//g' | sed 's/,//g' | awk '{print $2}')" || (_SIGNAL_ "74" "_CUTE_ \$NAPKS: create \$NAPKS failed; Exiting..." 24)
 		if [[ "${TYPE[17]}" == *User* ]]
 		then
 			export ISUSER=users
@@ -132,11 +133,7 @@ _CUTE_ () { # checks if USENAME is found in GNAMES and if it is an organization 
 			mkdir -p "$JDR"
 		fi
 		printf "%s\\n" "${TYPE[@]}" > "$JDR"/profile
-		if [[ ! -d "$JDR/var/conf" ]] 
-		then
-			mkdir -p "$JDR/var/conf"
-			printf "%s\\n\\n" "This directory contains results from query for \` AndroidManifest.xml \` files in GitHub $USENAME repositores.  " > "$JDR/var/conf/README.md" 
-		fi
+		_MKJDC_ 
 		_NAMESMAINBLOCK_ CNAMES
 	fi
 	printf "%s\\n" "Processing $USENAME:"
@@ -157,6 +154,14 @@ _CUTE_ () { # checks if USENAME is found in GNAMES and if it is an organization 
 	fi
 }
 
+_MKJDC_ () { 
+	if [[ ! -d "$JDR/var/conf" ]] 
+	then
+		mkdir -p "$JDR/var/conf"
+		printf "%s\\n\\n" "This directory contains results from query for \` AndroidManifest.xml \` files in GitHub $USENAME repositores.  " > "$JDR/var/conf/README.md" 
+	fi
+}
+
 _FJDX_ () { 
 	export SFX="$(tar tf "${NAME##*/}.${COMMIT::7}.tar.gz" | awk 'NR==1' )" || _SIGNAL_ "82" "_FJDX_"
 	(tar xvf "${NAME##*/}.${COMMIT::7}.tar.gz" | grep AndroidManifest.xml || _SIGNAL_ "84" "_FJDX_") ; _IAR_ "$JDR/$SFX" || _SIGNAL_ "86" "_FJDX_"
@@ -165,9 +170,9 @@ _FJDX_ () {
 _GC_ () { 
 	if [[ "$OAUT" != "" ]] # see $RDR/.conf/GAUTH file for information  
 	then # https://unix.stackexchange.com/questions/117992/download-only-first-few-bytes-of-a-source-page
-	 	curl -u "$OAUT" -r 0-1 https://api.github.com/repos/"$USER/$REPO"/commits -s 2>&1 | head -n 3 | tail -n 1 | awk '{ print $2 }' | sed 's/"//g' | sed 's/,//g' 
+	 	curl -u "$OAUT" https://api.github.com/repos/"$USER/$REPO"/commits -s 2>&1 | head -n 3 | tail -n 1 | awk '{ print $2 }' | sed 's/"//g' | sed 's/,//g' 
 	else
-	 	curl -r 0-1 https://api.github.com/repos/"$USER/$REPO"/commits -s 2>&1 | head -n 3 | tail -n 1 | awk '{ print $2 }' | sed 's/"//g' | sed 's/,//g' 
+	 	curl https://api.github.com/repos/"$USER/$REPO"/commits -s 2>&1 | head -n 3 | tail -n 1 | awk '{ print $2 }' | sed 's/"//g' | sed 's/,//g' 
 	fi
 }
 
@@ -178,7 +183,7 @@ _NAND_ () { # writed configuration file for repository if AndroidManifest.xml fi
 }
 
 _PRINTAS_ () {
-	printf "\\n\\e[1;34mSearching for AndroidManifest.xml files:\\e[0m\\n"'\033]2;Searching for AndroidManifest.xml files: OK\007'
+	printf "\\e[1;34mSearching for AndroidManifest.xml files:\\e[0m\\n"'\033]2;Searching for AndroidManifest.xml files: OK\007'
 }
 
 _PRINTCK_ () {
@@ -199,8 +204,16 @@ _PRINTJS_ () {
 }
 
 _SIGNAL_ () {
-	STRING="SIGNAL $1 found in $2 ${0##*/} build.github.bash!  Continuing...  "
-	printf "\\e[2;7;38;5;210m%s\\e[0m" "$STRING" 
+ 	if [[ -z ${3:-} ]]
+	then
+		STRING="SIGNAL $1 found in $2 ${0##*/} build.github.bash!  Continuing..."
+		printf "\\e[2;7;38;5;210m%s\\e[0m" "$STRING" 
+	else
+		SG=$3
+		STRING="EXIT SIGNAL $1 recieved in $2 ${0##*/} build.github.bash!  Exiting..."
+		printf "\\e[2;7;38;5;210m%s\\e[0m" "$STRING" 
+		exit $SG
+	fi
 }
 
 if [[ -z "${1:-}" ]] 
@@ -223,11 +236,10 @@ printf "\\n\\e[1;38;5;116m%s\\n\\e[0m" "${0##*/}: Beginning BuildAPKs with build
 . "$RDR"/scripts/sh/shlibs/buildAPKs/names.sh
 . "$RDR"/scripts/sh/shlibs/mkfiles.sh
 . "$RDR"/scripts/sh/shlibs/mkdirs.sh
-_MKDIRS_ "cache/stash" "cache/tarballs" "db" "db/log" "log/signal"
-_MKFILES_ "db/BNAMES" "db/B10NAMES" "db/B100NAMES" "db/CNAMES" "db/ENAMES" "db/GNAMES" "db/QNAMES" "db/RNAMES" "db/ZNAMES"
-if grep -iw "$USENAME" "$RDR"/var/db/[PRZ]NAMES
-	# $USENAME is in the pending or zero lists
-then	# create null directory and repos file, and exit
+_MKDIRS_ "cache/stash" "cache/tarballs" "db" "db/log" "log/messages"
+_MKFILES_ "db/BNAMES" "db/B10NAMES" "db/B100NAMES" "db/CNAMES" "db/ENAMES" "db/GNAMES" "db/QNAMES" "db/RNAMES" "db/XNAMES" "db/ZNAMES"
+if grep -iw "$USENAME" "$RDR"/var/db/[PRXZ]NAMES
+then	# create null directory, profile, repos files, and exit
 	if grep -iw "$USENAME" "$RDR"/var/db/ONAMES
 	then
 		JDR="$RDR/sources/github/orgs/$USER"
@@ -235,10 +247,11 @@ then	# create null directory and repos file, and exit
 		JDR="$RDR/sources/github/users/$USER"
 	fi
 	mkdir -p "$JDR" # create null directory
+	touch "$JDR"/profile # create null profile file 
 	touch "$JDR"/repos # create null repos file 
-	printf "\\e[7;38;5;208mUsername %s is found in %s: See preceeding output.  Not processing username %s!  Remove the username from the corresponding file(s) and the user's build directory in %s to process %s.  Then run \` %s \` again to attempt to build %s's APK projects, if any.  File %s has more information:\\n\\n\\e[0m" "$USENAME" "~/${RDR##*/}/var/db/[PRZ]NAMES" "$USENAME" "~/${RDR##*/}/sources/github/{orgs,users}" "$USENAME" "${0##*/} $USENAME" "$USENAME" "~/${RDR##*/}/var/db/README.md" 
+	printf "\\e[7;38;5;208mUsername %s is found in %s: See preceeding output.  Not processing username %s!  Remove the username from the corresponding file(s) and the user's build directory in %s to process %s.  Then run \` %s \` again to attempt to build %s's APK projects, if any.  File %s has more information:\\n\\n\\e[0m" "$USENAME" "~/${RDR##*/}/var/db/[PRXZ]NAMES" "$USENAME" "~/${RDR##*/}/sources/github/{orgs,users}" "$USENAME" "${0##*/} $USENAME" "$USENAME" "~/${RDR##*/}/var/db/README.md" 
 	cat "$RDR/var/db/README.md" | grep -v \<\!
-	printf "\\e[7;38;5;208m\\nUsername %s is found in %s: Not processing username %s!  Remove the username from the corresponding file(s) and the user's build directory in %s to process %s.  Then run \` %s \` again to attempt to build %s's APK projects, if any.  Scroll up to read the %s file.\\e[0m\\n" "$USENAME" "~/${RDR##*/}/var/db/[PRZ]NAMES" "$USENAME" "~/${RDR##*/}/sources/github/{orgs,users}" "$USENAME" "${0##*/} $USENAME" "$USENAME" "~/${RDR##*/}/var/db/README.md" 
+	printf "\\e[7;38;5;208m\\nUsername %s is found in %s: Not processing username %s!  Remove the username from the corresponding file(s) and the user's build directory in %s to process %s.  Then run \` %s \` again to attempt to build %s's APK projects, if any.  Scroll up to read the %s file.\\e[0m\\n" "$USENAME" "~/${RDR##*/}/var/db/[PRXZ]NAMES" "$USENAME" "~/${RDR##*/}/sources/github/{orgs,users}" "$USENAME" "${0##*/} $USENAME" "$USENAME" "~/${RDR##*/}/var/db/README.md" 
 	exit 0 # and exit
 else	# check whether login is a user or an organization
 	_CUTE_
@@ -248,9 +261,8 @@ JARR=($(grep -v JavaScript "$JDR/repos" | grep -B 5 Java | grep svn_url | awk -v
 _PRINTJD_
 if [[ "${JARR[@]}" == *ERROR* ]]
 then
-	_SIGNAL_ "404" "search for Java language repositories"
 	_NAMESMAINBLOCK_ CNAMES ZNAMES
-	exit 4
+	_SIGNAL_ "404" "search for Java language repositories" "4"
 fi
 F1AR=($(find "$JDR" -maxdepth 1 -type d)) # creates array of $JDR contents 
 _WAKELOCK_
