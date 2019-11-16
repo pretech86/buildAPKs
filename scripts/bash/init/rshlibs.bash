@@ -40,6 +40,10 @@ _IFSHLIBS_() {
 	then
 		git clone https://github.com/shlibs/shlibs.bash scripts/bash/shlibs || printf "\\nCannot clone module %s into~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.bash" "${RDR##*/}"
 	fi
+	if [[ ! -d "$RDR"/scripts/sh/shlibs ]] 
+	then
+		git clone https://github.com/shlibs/shlibs.sh scripts/sh/shlibs || printf "\\nCannot clone module %s into~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.sh" "${RDR##*/}"
+	fi
 }
 
 _IFSHLIBS_

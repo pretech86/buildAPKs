@@ -49,7 +49,6 @@ then
 fi
 JDR="$PWD"
 . "$RDR"/scripts/bash/init/ushlibs.bash 
-. "$RDR"/scripts/bash/init/rshlibs.bash 
 . "$RDR"/scripts/bash/shlibs/lock.bash
 . "$RDR"/scripts/bash/shlibs/buildAPKs/bnchn.bash bch.st 
 . "$RDR"/scripts/bash/shlibs/buildAPKs/fandm.bash 

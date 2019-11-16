@@ -36,6 +36,17 @@ trap _SRSTRPEXIT_ EXIT
 trap _SRSTRPSIGNAL_ HUP INT TERM 
 trap _SRSTRPQUIT_ QUIT 
 
+_IFSHLIBS_() { 
+	if [[ ! -d "$RDR"/scripts/bash/shlibs ]] 
+	then
+		git clone https://github.com/shlibs/shlibs.bash scripts/bash/shlibs || printf "\\nCannot clone module %s into~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.bash" "${RDR##*/}"
+	fi
+	if [[ ! -d "$RDR"/scripts/sh/shlibs ]] 
+	then
+		git clone https://github.com/shlibs/shlibs.sh scripts/sh/shlibs || printf "\\nCannot clone module %s into~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.sh" "${RDR##*/}"
+	fi
+}
+
 _IRGR_() { # https://stackoverflow.com/questions/53977052/how-to-properly-initialize-a-remote-git-repository 
 		local USER="BuildAPKs"
 		local HOSTIP="github.com"
@@ -68,6 +79,7 @@ cd "$RDR"
 if [[ ! -d "$RDR"/.git ]] 
 then
 	_IRGR_
+	_IFSHLIBS_
 fi
 if [[ ! -f "$RDR"/scripts/bash/shlibs/.git ]] || [[ ! -f "$RDR"/scripts/sh/shlibs/.git ]] 
 then
