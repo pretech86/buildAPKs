@@ -84,5 +84,5 @@ if [[ ! -d "$RDR" ]]
 then
 	git clone https://github.com/SDRausty/buildAPKs || printf "\\e[1;38;5;117m%s\\e[0m\\n" "$STRING2"
 fi
-bash "$RDR/scripts/bash/build/build.entertainment.bash"
+. "$RDR/scripts/bash/build/build.entertainment.bash"
 # setup.buildAPKs.bash EOF
