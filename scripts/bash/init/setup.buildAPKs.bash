@@ -79,10 +79,11 @@ do
 		_INPKGS_
 	fi
 done
-cd "$HOME"
 if [[ ! -d "$RDR" ]]
 then
-	git clone https://github.com/SDRausty/buildAPKs || printf "\\e[1;38;5;117m%s\\e[0m\\n" "$STRING2"
+	cd "$HOME" && git clone https://github.com/SDRausty/buildAPKs || printf "\\e[1;38;5;117m%s\\e[0m\\n" "$STRING2"
 fi
-. "$RDR/scripts/bash/build/build.entertainment.bash"
+export JAD=github.com/BuildAPKs/buildAPKs.entertainment
+export JID=entertainment # job id/name
+. "$RDR"/scripts/bash/init/init.bash "$@"
 # setup.buildAPKs.bash EOF
