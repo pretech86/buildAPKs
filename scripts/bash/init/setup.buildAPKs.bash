@@ -85,5 +85,5 @@ then
 fi
 export JAD=github.com/BuildAPKs/buildAPKs.entertainment
 export JID=entertainment # job id/name
-. "$RDR"/scripts/bash/init/init.bash "$@"
+bash "$RDR"/scripts/bash/init/init.bash "$@"
 # setup.buildAPKs.bash EOF

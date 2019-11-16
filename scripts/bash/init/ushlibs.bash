@@ -49,17 +49,17 @@ _UFSHLIBS_() { # add and update submodules
 	ARSHLIBS=([bash/shlibs]="shlibs/shlibs.bash" [sh/shlibs]="shlibs/shlibs.sh")
 	for MLOC in "${!ARSHLIBS[@]}" 
 	do
-		if ! grep "${ARSHLIBS[$MLOC]}" .gitmodules 1>/dev/null  
+		if grep "${ARSHLIBS[$MLOC]}" .gitmodules >/dev/null  
 		then
- 			printf "\\e[1;7;38;5;96mAdding ~/%s/scripts/%s...\\e[0m\\n" "${RDR##*/}" "$MLOC" ; git submodule add https://github.com/${ARSHLIBS[$MLOC]} scripts/$MLOC || printf "Cannot add submodule ~/%s/scripts/%s: Continuing...\\n" "${RDR##*/}" "$MLOC"
+		rm -f scripts/$MLOC/.git
+ 		printf "\\e[1;7;38;5;96mUpdating ~/%s/scripts/%s...\\e[0m\\n" "${RDR##*/}" "$MLOC" ; git submodule update --recursive --remote scripts/$MLOC || printf "Cannot update module ~/%s/scripts/%s: Continuing...\\n" "${RDR##*/}" "$MLOC"
 		fi
 	done
 	for MLOC in "${!ARSHLIBS[@]}" 
 	do
-		if grep "${ARSHLIBS[$MLOC]}" .gitmodules 1>/dev/null  
+		if ! grep "${ARSHLIBS[$MLOC]}" .gitmodules 1>/dev/null  
 		then
-		rm -f scripts/$MLOC/.git
- 		printf "\\e[1;7;38;5;96mUpdating ~/%s/scripts/%s...\\e[0m\\n" "${RDR##*/}" "$MLOC" ; git submodule update --recursive --remote scripts/$MLOC || printf "Cannot update module ~/%s/scripts/%s: Continuing...\\n" "${RDR##*/}" "$MLOC"
+ 			printf "\\e[1;7;38;5;96mAdding ~/%s/scripts/%s...\\e[0m\\n" "${RDR##*/}" "$MLOC" ; git submodule add https://github.com/${ARSHLIBS[$MLOC]} scripts/$MLOC || printf "Cannot add submodule ~/%s/scripts/%s: Continuing...\\n" "${RDR##*/}" "$MLOC"
 		fi
 	done
 }
