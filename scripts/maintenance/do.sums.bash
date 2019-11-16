@@ -6,7 +6,7 @@
 # To check the files use; sha512sum -c sha512.sum
 #####################################################################
 set -eu
-MTIME="$(ls -l --time-style=+"%s" .git/ORIG_HEAD | awk '{print $6}')"
+MTIME="$(ls -l --time-style=+"%s" .git/FETCH_HEAD | awk '{print $6}')"
 TIME="$(date +%s)"
 if [[ $(($TIME - $MTIME)) -gt 43200 ]]
 then
@@ -14,11 +14,11 @@ then
 fi
 ./scripts/maintenance/vgen.sh
 rm -f *.sum
-FILELIST=( $(find . -type f | grep -v .git | sort) )
-CHECKLIST=(sha512sum)
+FILELIST=( $(find . -type f | grep -wv .git | sort) )
+CHECKLIST=(sha512sum) # md5sum sha1sum sha224sum sha256sum sha384sum
 for SCHECK in ${CHECKLIST[@]}
 do
- 	printf "%s\\n" "Creating $SCHECK file: Please wait a moment..."
+ 	printf "%s\\n" "Creating $SCHECK file..."
 	for FILE in "${FILELIST[@]}"
 	do
 		$SCHECK "$FILE" >> ${SCHECK::-3}.sum
@@ -31,8 +31,9 @@ do
 	$SCHECK -c ${SCHECK::-3}.sum
 done
 git add .
-git commit
+SN="$(sn.sh)"
+git commit -m "$SN"
 git push
 ls
-printf "\\e[1;38;5;112m%s\\e[0m\\n" "$PWD"
+printf "%s\\n" "$PWD"
 # do.sums.bash EOF
