@@ -53,6 +53,7 @@ _SBOTRPSIGNAL_() { # run on signal
 
 _SBOTRPQUIT_() { # run on quit
 	printf "\\e[?25h\\e[1;7;38;5;0mbuildAPKs %s WARNING:  Quit signal %s received by build.one.bash!\\e[0m\\n" "${0##*/}" "$?"
+	_CLEANUP_
  	exit 162 
 }
 
@@ -119,9 +120,9 @@ then
 	mkdir -p ./res
 fi
 sleep 0.01
-MSDKVERSIO="$(getprop ro.build.version.min_supported_target_sdk)"
+MSDKVERSIO="$(getprop ro.build.version.min_supported_target_sdk)" ||:
 MSDKVERSION="${MSDKVERSIO:-14}"
-TSDKVERSIO="$(getprop ro.build.version.sdk)"
+TSDKVERSIO="$(getprop ro.build.version.sdk)" ||:
 TSDKVERSION="${TSDKVERSIO:-23}"
 sed -i "s/minSdkVersion\=\"[0-9]\"/minSdkVersion\=\"$MSDKVERSION\"/g" AndroidManifest.xml 
 sed -i "s/minSdkVersion\=\"[0-9][0-9]\"/minSdkVersion\=\"$MSDKVERSION\"/g" AndroidManifest.xml 
