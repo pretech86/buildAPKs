@@ -66,24 +66,27 @@ _ATT_ () {
 }
 
 _BUILDAPKS_ () { # https://developer.github.com/v3/repos/commits/
-	printf "\\n%s\\n" "Getting $NAME/tarball/$COMMIT -o ${NAME##*/}.${COMMIT::7}.tar.gz:"
-	if [[ -z "${CULR:-}" ]]
-	then
-		if [[ "$OAUT" != "" ]] # see .conf/GAUTH file 
+	if ! grep -iw "${NAME##*/}" "$RDR"/var/db/ANAMES # repository name is not found
+	then	# download tarball
+		printf "\\n%s\\n" "Getting $NAME/tarball/$COMMIT -o ${NAME##*/}.${COMMIT::7}.tar.gz:"
+		if [[ -z "${CULR:-}" ]]
 		then
-			curl -u "$OAUT" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "40" "_BUILDAPKS_"
+			if [[ "$OAUT" != "" ]] # see .conf/GAUTH file 
+			then
+				curl -u "$OAUT" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "40" "_BUILDAPKS_"
+			else
+				curl -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "42" "_BUILDAPKS_"
+			fi
 		else
-			curl -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "42" "_BUILDAPKS_"
+			if [[ "$OAUT" != "" ]] # see .conf/GAUTH file 
+			then
+				curl --limit-rate "$CULR" -u "$OAUT" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "40" "_BUILDAPKS_"
+			else
+				curl --limit-rate "$CULR" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "42" "_BUILDAPKS_"
+			fi
 		fi
-	else
-		if [[ "$OAUT" != "" ]] # see .conf/GAUTH file 
-		then
-			curl --limit-rate "$CULR" -u "$OAUT" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "40" "_BUILDAPKS_"
-		else
-			curl --limit-rate "$CULR" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "42" "_BUILDAPKS_"
-		fi
+		_FJDX_ 
 	fi
-	_FJDX_ 
 }
 
 _CKAT_ () {
@@ -111,18 +114,19 @@ done
 }
 
 _CUTE_ () { # checks if USENAME is found in GNAMES and if it is an organization or a user
+	. "$RDR"/scripts/bash/shlibs/buildAPKs/bnchn.bash bch.st 
 	if [[ $(grep -iw "$USENAME" "$RDR/var/db/log/GNAMES" | awk '{print $2}') == User ]] && [[ -f "$RDR/sources/github/users/$USER/profile" ]] && [[ -f "$RDR/sources/github/users/$USER/repos" ]]
 	then 
 		export ISUSER=users
 		export ISOTUR=users
-		export USENAME="$(grep -iw "$USENAME" "$RDR/var/db/GNAMES" | awk '{print $1}')"
+		export USENAME="$(grep -iw "$USENAME" "$RDR/var/db/log/GNAMES" | awk '{print $1}')"
 		export JDR="$RDR/sources/github/$ISOTUR/$USER"
 		export JID="git.$ISOTUR.$USER"
 	elif [[ $(grep -iw "$USENAME" "$RDR/var/db/log/GNAMES" | awk '{print $2}') == Organization ]] && [[ -f "$RDR/sources/github/orgs/$USER/profile" ]] && [[ -f "$RDR/sources/github/orgs/$USER/repos" ]]
 	then 
 		export ISUSER=users
 		export ISOTUR=orgs
-		export USENAME="$(grep -iw "$USENAME" "$RDR/var/db/GNAMES" | awk '{print $1}')"
+		export USENAME="$(grep -iw "$USENAME" "$RDR/var/db/log/GNAMES" | awk '{print $1}')"
 		export JDR="$RDR/sources/github/$ISOTUR/$USER"
 		export JID="git.$ISOTUR.$USER"
 	else	# get login and type of login from GitHub
@@ -163,8 +167,6 @@ _CUTE_ () { # checks if USENAME is found in GNAMES and if it is an organization 
 	do
 		grep "$KEYS" "$JDR/profile" | sed 's/\,//g' | sed 's/\"//g'
 	done
-	_WAKELOCK_
-	. "$RDR"/scripts/bash/shlibs/buildAPKs/bnchn.bash bch.st 
 	RCT="$(grep public_repos "$JDR/profile" | sed 's/\,//g' | sed 's/\"//g' | awk '{print $2}')" # repository count
 	RPCT="$(($RCT/100))" # repository page count
 	if [[ $(($RCT%100)) -gt 0 ]] # there is a remainder
@@ -206,7 +208,13 @@ _MKJDC_ () {
 	if [[ ! -d "$JDR/var/conf" ]] 
 	then
 		mkdir -p "$JDR/var/conf"
-		printf "%s\\n\\n" "This directory contains results from query for \` AndroidManifest.xml \` files in GitHub $USENAME repositores.  " > "$JDR/var/conf/README.md" 
+		printf "%s\\n\\n" "This directory contains results from query for \` AndroidManifest.xml \` files in GitHub $USENAME repositores.  
+		| file name | purpose |
+		-----------------------
+		| *.ck      | commit and AndroidManifest.xml query result | 
+		| NAMES.db  | NAMES files proccessed | 
+		| NAMFS.db  | number of AndroidManifest.xml files found | 
+		| NAPKS.db  | number of APKs built |  " > "$JDR/var/conf/README.md" 
 	fi
 }
 
@@ -232,6 +240,7 @@ _MAINGITHUB_ () {
 	export USENAME="${UONE##*/}"
 	export USER="${USENAME,,}"
 	export OAUT="$(cat "$RDR/.conf/GAUTH" | awk 'NR==1')" # loads login:token key from GAUTH file
+	export WRAMES=0
 	printf "\\n\\e[1;38;5;116m%s\\n\\e[0m" "${0##*/}: Beginning BuildAPKs with build.github.bash $@:"
 	. "$RDR"/scripts/bash/shlibs/buildAPKs/fandm.bash
 	. "$RDR"/scripts/bash/shlibs/buildAPKs/prep.bash
@@ -240,7 +249,7 @@ _MAINGITHUB_ () {
 	. "$RDR"/scripts/sh/shlibs/mkfiles.sh
 	. "$RDR"/scripts/sh/shlibs/mkdirs.sh
 	_MKDIRS_ "cache/stash" "cache/tarballs" "db" "db/log" "log/messages"
-	_MKFILES_ "db/ANAMES" "db/BNAMES" "db/B10NAMES" "db/B100NAMES" "db/CNAMES" "db/GNAMES" "db/QNAMES" "db/RNAMES" "db/XNAMES" "db/ZNAMES"
+	_MKFILES_ "db/ANAMES" "db/BNAMES" "db/B10NAMES" "db/B100NAMES" "db/CNAMES" "db/GNAMES" "db/QNAMES" "db/RNAMES" "db/XNAMES" "db/ZNAMES" "db/log/BNAMES" "db/log/B10NAMES" "db/log/B100NAMES" "db/log/GNAMES"
 	if grep -Hiw "$USENAME" "$RDR"/var/db/[PRXZ]NAMES
 	then	# create null directory, profile, repos files, and exit
 		if grep -iw "$USENAME" "$RDR"/var/db/ONAMES 1>/dev/null
@@ -267,7 +276,7 @@ _MAINGITHUB_ () {
 		_NAMESMAINBLOCK_ CNAMES ZNAMES
 		_SIGNAL_ "404" "search for Java language repositories" "4"
 	fi
-	F1AR=($(find "$JDR" -maxdepth 1 -type d)) # creates array of $JDR contents 
+	F1AR=($(find "$JDR" -maxdepth 1 -type d)) # creates array of JDR contents 
 	cd "$JDR"
 	_PRINTAS_
 	for NAME in "${JARR[@]}" # lets you delete partial downloads and repopulates from GitHub.  Directories can be deleted, too.  They are repopulated from the tarballs.  

@@ -36,6 +36,5 @@ trap _SETRPQUIT_ QUIT
 
 export JAD=github.com/sdrausty/buildAPKsBrowsers
 export JID=browsers		# job id/name
-. "$HOME/buildAPKs/scripts/bash/init/init.bash"
-
-#EOF
+. "$HOME/buildAPKs/scripts/bash/init/init.bash" "$@"
+# buildBrowsers.bash EOF
