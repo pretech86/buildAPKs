@@ -1,5 +1,5 @@
 #!/bin/env bash 
-# Copyright 2017-2019 (c) all rights reserved by BuildAPKs 
+# Copyright 2017-2019 (c) all rights reserved by SDRausty
 # See LICENSE for details https://buildapks.github.io/docsBuildAPKs/
 #####################################################################
 set -Eeuo pipefail
@@ -65,7 +65,7 @@ STRING2="Cannot update ~/${RDR##*/} prerequisite: Continuing..."
 printf "\\e[1;38;5;115m%s\\e[0m\\n" "Beginning buildAPKs setup:"
 COMMANDR="$(command -v au)" || (printf "%s\\n\\n" "$STRING1") 
 COMMANDIF="${COMMANDR##*/}"
-PKGS=(aapt apksigner curl dx ecj git)
+PKGS=(aapt apksigner curl dx ecj findutils git)
 if [[ -z "${1:-}" ]]
 then
 	ARGS=""

@@ -9,7 +9,6 @@ export RDR="$HOME/buildAPKs"
 . "$RDR"/scripts/bash/shlibs/trap.bash 67 68 69 "${0##*/}"
 
 _AND_ () { # writes configuration file for git repository tarball if AndroidManifest.xml file is found in git repository
-	export CK=0
 	printf "%s\\n" "$COMMIT" > "$JDR/var/conf/$USER.${NAME##*/}.${COMMIT::7}.ck"
 	printf "%s\\n" "0" >> "$JDR/var/conf/$USER.${NAME##*/}.${COMMIT::7}.ck"
 	if [[ -z "${1:-}" ]] 
@@ -24,8 +23,8 @@ _AND_ () { # writes configuration file for git repository tarball if AndroidMani
 _ATT_ () {
 	if [[ "$CK" != 1 ]]
 	then
-		if [[ ! -f "${NAME##*/}.${COMMIT::7}.tar.gz" ]] # tar file exists
-		then # https://stackoverflow.com/questions/3685970/check-if-a-bash-array-contains-a-value
+		if [[ ! -f "${NAME##*/}.${COMMIT::7}.tar.gz" ]] # tar file does not exist
+		then 
 			printf "%s\\n" "Querying $USENAME $REPO ${COMMIT::7} for AndroidManifest.xml file:"
 			if [[ "$COMMIT" != "" ]] 
 			then
@@ -37,27 +36,28 @@ _ATT_ () {
 					else
 	 					ISAND="$(curl -s -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
 					fi
-			else
+				else
 					if [[ "$OAUT" != "" ]] 
 					then
 						ISAND="$(curl --limit-rate "$CULR" -s -u "$OAUT" -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
 					else
 	 					ISAND="$(curl --limit-rate "$CULR" -s -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
 					fi
-			fi
-				 	if grep AndroidManifest.xml <<< "$ISAND" 
-					then
-						_AND_ 0
-						_BUILDAPKS_
-					else
-						_NAND_
+				fi
+			 	if grep AndroidManifest.xml <<< "$ISAND" 
+				then
+					_AND_ 0
+					_BUILDAPKS_
+				else
+					_NAND_
 				fi
 			fi
+		# https://stackoverflow.com/questions/3685970/check-if-a-bash-array-contains-a-value
 		elif [[ -f "${NAME##*/}.${COMMIT::7}.tar.gz" ]] && [[ ! "${F1AR[@]}" =~ "${NAME##*/}" ]] # tarfile exists and directory does not exist
 		then
 			_AND_
 			_FJDX_ 
-		elif [[ -f "${NAME##*/}.${COMMIT::7}.tar.gz" ]] && [[ "${F1AR[@]}" =~ "${NAME##*/}" ]] # tarfile and directory exist
+		elif [[ -f "${NAME##*/}.${COMMIT::7}.tar.gz" ]] && [[ "${F1AR[@]}" =~ "${NAME##*/}" ]] # tarfile and directory exists
 		then
 			_AND_
 			export SFX="$(tar tf "${NAME##*/}.${COMMIT::7}.tar.gz" | awk 'NR==1' )" || _SIGNAL_ "24" "_ATT_ SFX"
@@ -66,51 +66,53 @@ _ATT_ () {
 }
 
 _BUILDAPKS_ () { # https://developer.github.com/v3/repos/commits/
-	if ! grep -iw "${NAME##*/}" "$RDR"/var/db/ANAMES # repository name is not found
-	then	# download tarball
-		printf "\\n%s\\n" "Getting $NAME/tarball/$COMMIT -o ${NAME##*/}.${COMMIT::7}.tar.gz:"
-		if [[ -z "${CULR:-}" ]]
+	printf "\\n%s\\n" "Getting $NAME/tarball/$COMMIT -o ${NAME##*/}.${COMMIT::7}.tar.gz:"
+	if [[ -z "${CULR:-}" ]]
+	then
+		if [[ "$OAUT" != "" ]] # see .conf/GAUTH file 
 		then
-			if [[ "$OAUT" != "" ]] # see .conf/GAUTH file 
-			then
-				curl -u "$OAUT" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "40" "_BUILDAPKS_"
-			else
-				curl -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "42" "_BUILDAPKS_"
-			fi
+			curl --fail --retry 2 -u "$OAUT" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "40" "_BUILDAPKS_"
 		else
-			if [[ "$OAUT" != "" ]] # see .conf/GAUTH file 
-			then
-				curl --limit-rate "$CULR" -u "$OAUT" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "40" "_BUILDAPKS_"
-			else
-				curl --limit-rate "$CULR" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "42" "_BUILDAPKS_"
-			fi
+			curl --fail --retry 2 -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "42" "_BUILDAPKS_"
 		fi
-		_FJDX_ 
+	else
+		if [[ "$OAUT" != "" ]] # see .conf/GAUTH file 
+		then
+			curl --fail --retry 2 --limit-rate "$CULR" -u "$OAUT" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "40" "_BUILDAPKS_"
+		else
+			curl --fail --retry 2 --limit-rate "$CULR" -L "$NAME/tarball/$COMMIT" -o "${NAME##*/}.${COMMIT::7}.tar.gz" || _SIGNAL_ "42" "_BUILDAPKS_"
+		fi
 	fi
+	_FJDX_ 
 }
 
 _CKAT_ () {
 	_MKJDC_ 
 	CK=0
 	REPO=$(awk -F/ '{print $NF}' <<< "$NAME") # https://stackoverflow.com/questions/2559076/how-do-i-redirect-output-to-a-variable-in-shell 
-	NPCK="$(find "$JDR/var/conf/" -name "$USER.${NAME##*/}.???????.ck")" ||: # https://stackoverflow.com/questions/6363441/check-if-a-file-exists-with-wildcard-in-shell-script
-	for CKFILE in "$NPCK" 
-	do
- 	if [[ $CKFILE = "" ]] # configuration file is not found
- 	then
- 		printf "%s" "Checking $USENAME $REPO for last commit:  " 
-  		COMMIT="$(_GC_)" ||:
- 		printf "%s\\n" "Found ${COMMIT::7}; Continuing..."
- 		_ATT_ 
- 	else # load configuration information from file 
- 		printf "%s" "Loading $USENAME $REPO config from $CKFILE:  "
- 		COMMIT=$(head -n 1 "$NPCK") || _SIGNAL_ "62" "_CKAT_ COMMIT"
-  		CK=$(tail -n 1  "$NPCK") || _SIGNAL_ "64" "_CKAT_ CK"
-		_PRINTCK_ 
- 		_ATT_ 
+	if ! grep -iw "$REPO" "$RDR"/var/db/ANAMES # repository name is not found in ANAMES file
+	then	# proccess repository 
+		NPCK="$(find "$JDR/var/conf/" -name "$USER.${NAME##*/}.???????.ck")" ||: # https://stackoverflow.com/questions/6363441/check-if-a-file-exists-with-wildcard-in-shell-script
+		for CKFILE in "$NPCK" 
+		do
+		 	if [[ $CKFILE = "" ]] # configuration file is not found
+		 	then
+		 		printf "%s" "Checking $USENAME $REPO for last commit:  " 
+		  		COMMIT="$(_GC_)" ||:
+		 		printf "%s\\n" "Found ${COMMIT::7}; Continuing..."
+		 		_ATT_ 
+				sleep 0.${RANDOM::4} # eases network latency
+		 	else # load configuration information from file 
+		 		printf "%s" "Loading $USENAME $REPO config from $CKFILE:  "
+		 		COMMIT=$(head -n 1 "$NPCK") || _SIGNAL_ "62" "_CKAT_ COMMIT"
+		  		CK=$(tail -n 1  "$NPCK") || _SIGNAL_ "64" "_CKAT_ CK"
+				_PRINTCK_ 
+		 	fi
+			export CK=0
+		done
+	else
+		printf "%s" "Nit proccessing $REPO; found in "$RDR"/var/db/ANAMES file. " 
  	fi
-	sleep 0.${RANDOM::4}
-done
 }
 
 _CUTE_ () { # checks if USENAME is found in GNAMES and if it is an organization or a user
@@ -182,19 +184,19 @@ _CUTE_ () { # checks if USENAME is found in GNAMES and if it is an organization 
 			then
 				if [[ "$OAUT" != "" ]] # see .conf/GAUTH file for information 
 				then
-					curl -u "$OAUT" "https://api.github.com/$ISUSER/$USER/repos?per_page=100&page=$RPCT" > "$JDR/var/conf/repos.tmp" 
+					curl --fail --retry 2 -u "$OAUT" "https://api.github.com/$ISUSER/$USER/repos?per_page=100&page=$RPCT" > "$JDR/var/conf/repos.tmp" 
 					cat "$JDR/var/conf/repos.tmp" >> "$JDR/repos"  
 				else
-					curl "https://api.github.com/$ISUSER/$USER/repos?per_page=100&page=$RPCT" > "$JDR/var/conf/repos.tmp"
+					curl --fail --retry 2 "https://api.github.com/$ISUSER/$USER/repos?per_page=100&page=$RPCT" > "$JDR/var/conf/repos.tmp"
 					cat "$JDR/var/conf/repos.tmp" >> "$JDR/repos"  
 				fi
 			else
 				if [[ "$OAUT" != "" ]] 
 				then
-					curl --limit-rate "$CULR" -u "$OAUT" "https://api.github.com/$ISUSER/$USER/repos?per_page=100&page=$RPCT" > "$JDR/var/conf/repos.tmp"
+					curl --fail --retry 2 --limit-rate "$CULR" -u "$OAUT" "https://api.github.com/$ISUSER/$USER/repos?per_page=100&page=$RPCT" > "$JDR/var/conf/repos.tmp"
 					cat "$JDR/var/conf/repos.tmp" >> "$JDR/repos"  
 				else
-					curl --limit-rate "$CULR" "https://api.github.com/$ISUSER/$USER/repos?per_page=100&page=$RPCT" > "$JDR/var/conf/repos.tmp"
+					curl --fail --retry 2 --limit-rate "$CULR" "https://api.github.com/$ISUSER/$USER/repos?per_page=100&page=$RPCT" > "$JDR/var/conf/repos.tmp"
 					cat "$JDR/var/conf/repos.tmp" >> "$JDR/repos"  
 				fi
 			fi
