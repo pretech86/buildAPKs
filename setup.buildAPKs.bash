@@ -4,7 +4,6 @@
 #####################################################################
 set -Eeuo pipefail
 shopt -s nullglob globstar
-
 _SUPTRPERROR_() { # Run on script error.
 	local RV="$?"
 	printf "\\e[?25h\\e[1;7;38;5;0mbuildAPKs setupBuildAPKs.sh ERROR:  Signal %s received!\\e[0m\\n" "$RV"
@@ -65,14 +64,14 @@ STRING2="Cannot update ~/${RDR##*/} prerequisite: Continuing..."
 printf "\\e[1;38;5;115m%s\\e[0m\\n" "Beginning buildAPKs setup:"
 COMMANDR="$(command -v au)" || (printf "%s\\n\\n" "$STRING1") 
 COMMANDIF="${COMMANDR##*/}"
-PKGS=(aapt apksigner curl dx ecj findutils git)
+PKGS=(aapt apksigner curl dx ecj git)
 if [[ -z "${1:-}" ]]
 then
 	ARGS=""
 fi
 for PKG in "${PKGS[@]}"
 do
-	COMMANDP="$(command -v $PKG)" || printf "Command %s not found: Continuing...\\n""$PKG"
+	COMMANDP="$(command -v $PKG)" || printf "Command %s not found: Continuing...\\n" "$PKG"
 	COMMANDPF="${COMMANDP##*/}"
 	if [[ "$COMMANDPF" != "$PKG" ]] 
 	then 
@@ -83,7 +82,7 @@ if [[ ! -d "$RDR" ]]
 then
 	cd "$HOME" && git clone https://github.com/SDRausty/buildAPKs || printf "\\e[1;38;5;117m%s\\e[0m\\n" "$STRING2"
 fi
-export JAD=github.com/BuildAPKs/buildAPKs.entertainment
-export JID=entertainment # job id/name
+export JAD=github.com/BuildAPKs/buildAPKs.entertainment	# job address
+export JID=entertainment	# job id/name
 bash "$RDR"/scripts/bash/init/init.bash "$@"
 # setup.buildAPKs.bash EOF

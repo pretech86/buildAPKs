@@ -31,16 +31,16 @@ _ATT_ () {
 				then
 					if [[ "$OAUT" != "" ]] 
 					then
-						ISAND="$(curl -s -u "$OAUT" -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
+						ISAND="$(curl --fail --retry 2 -s -u "$OAUT" -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
 					else
-	 					ISAND="$(curl -s -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
+	 					ISAND="$(curl --fail --retry 2 -s -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
 					fi
 				else
 					if [[ "$OAUT" != "" ]] 
 					then
-						ISAND="$(curl --limit-rate "$CULR" -s -u "$OAUT" -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
+						ISAND="$(curl --fail --retry 2 --limit-rate "$CULR" -s -u "$OAUT" -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
 					else
-	 					ISAND="$(curl --limit-rate "$CULR" -s -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
+	 					ISAND="$(curl --fail --retry 2 --limit-rate "$CULR" -s -i "https://api.github.com/repos/$USENAME/$REPO/git/trees/$COMMIT?recursive=1")" ||:
 					fi
 				fi
 			 	if grep AndroidManifest.xml <<< "$ISAND" 
@@ -110,7 +110,7 @@ _CKAT_ () {
 			export CK=0
 		done
 	else
-		printf "%s" "Nit processing $REPO; found in "$RDR"/var/db/ANAMES file. " 
+		printf "%s" "Not processing $REPO; listing found in ~/"${RDR##*/}"/var/db/ANAMES file. " 
  	fi
 }
 
@@ -239,9 +239,9 @@ _FJDX_ () {
 _GC_ () { 
 	if [[ "$OAUT" != "" ]] # see .conf/GAUTH file for information  
 	then # https://unix.stackexchange.com/questions/117992/download-only-first-few-bytes-of-a-source-page
-	 	curl -u "$OAUT" https://api.github.com/repos/"$USER/$REPO"/commits -s 2>&1 | head -n 3 | tail -n 1 | awk '{ print $2 }' | sed 's/"//g' | sed 's/,//g' 
+	 	curl --fail --retry 2 -u "$OAUT" https://api.github.com/repos/"$USER/$REPO"/commits -s 2>&1 | head -n 3 | tail -n 1 | awk '{ print $2 }' | sed 's/"//g' | sed 's/,//g' 
 	else
-	 	curl https://api.github.com/repos/"$USER/$REPO"/commits -s 2>&1 | head -n 3 | tail -n 1 | awk '{ print $2 }' | sed 's/"//g' | sed 's/,//g' 
+	 	curl --fail --retry 2 https://api.github.com/repos/"$USER/$REPO"/commits -s 2>&1 | head -n 3 | tail -n 1 | awk '{ print $2 }' | sed 's/"//g' | sed 's/,//g' 
 	fi
 }
 
@@ -252,7 +252,7 @@ _MAINGITHUB_ () {
 	fi
 	export USENAME="${UONE##*/}"
 	export USER="${USENAME,,}"
-	export OAUT="$(cat "$RDR/.conf/GAUTH" | awk 'NR==1')" # loads login:token key from GAUTH file
+	export OAUT="$(cat "$RDR/.conf/GAUTH" | awk 'NR==1')" # load login:token key from .conf/GAUTH file, see the GAUTH file for more information to enable OAUTH authentication
 	export WRAMES=0
 	printf "\\n\\e[1;38;5;116m%s\\n\\e[0m" "${0##*/}: Beginning BuildAPKs with build.github.bash $@:"
 	. "$RDR"/scripts/bash/shlibs/buildAPKs/fandm.bash
@@ -294,8 +294,12 @@ _MAINGITHUB_ () {
 	F1AR=($(find "$JDR" -maxdepth 1 -type d)) # creates array of JDR contents 
 	cd "$JDR"
 	_PRINTAS_
-	for NAME in "${JARR[@]}" # lets you delete partial downloads and repopulates from GitHub.  Directories can be deleted, too.  They are repopulated from the tarballs.  
-	do #  This creates a "slate" within each github/$JDR that can be selectively reset when desired.  This can be important on a slow connection.
+	for NAME in "${JARR[@]}" # lets you delete partial downloads and repopulates a JDR directory from remote source.  Directories can be deleted, too.  They are repopulated from the downloaded tarballs.  
+	do	# This creates a "slate" within each ~/buildAPKs/sources/github/{orgs,users}/JDR folder that can be selectively reset.  This can be important on a slow connection that might yield incomplete download results on a first attempt to download and build multiple APKs from remote source code.  
+		# To populate a partially downloaded JDR folder without deleting everything that was downloaded remove the ~/buildAPKs/sources/github/{orgs,users}/JDR/var directory which this script creates.  The unpacked tarball directories which correspond to individual repositories can be deleted to reset a JDR directory as well.  This can be accomplished with one find command ` find . -maxdepth 1 -type d -exec rm -rf {} \; ` issued in the JDR folder.  Checking the integity of multiple tarballs is automated with ` ~/buildAPKs/scripts/maintenance/delete.corrupt.tars.sh ls ` which should be excecuted in the same JDR directory to check for tarball errors.  If a corrupt tarball is found by ` delete.corrupt.tars.sh `, it will be deleted.  
+		# Run ` build.github.bash login [curl rate] ` and the logins you are trying to download might download easier if you are encountering difficulties downloading.  This information regards extremely fast and very slow connections, i.e. slower than 14400 baud and 4G at max speed.  Rate limiting is also effective on very high speed connections.  See ` grep -hrC 4 sleep ~/buildAPKs/scripts ` to view how buildAPKs handles device and network latency.  Excessive latency breaks downloads. 
+		# If you have trouble while downloading APK source code repositories, better results might be found downloading the many files ` build.github.bash ` can request when searching for source code and downloading source code tarball files with rate limiting enabled than without rate limiting.
+		# An example is provided for convenience; ` build.github.bash https://github.com/BuildAPKs c 33600 ` will throttle the download rate for ` curl ` to 33600.  It will take a long time to attempt to download everything that is written in Java and has an AndroidManifest.xml file from BuildAPKs at GitHub at this speed as some of the repositories are quite large.  Experimenting with the rate limit speed is recommended as devices, connections and the time of day are all fairly unique and factors for a successful download and build on device.
 		_CKAT_ 
 	done
 	_PRINTJD_
@@ -304,7 +308,7 @@ _MAINGITHUB_ () {
 	. "$RDR"/scripts/bash/shlibs/buildAPKs/bnchn.bash bch.gt 
 }
 
-_NAND_ () { # writed configuration file for repository if AndroidManifest.xml file is NOT found in git repository
+_NAND_ () { # write configuration file for repository if AndroidManifest.xml file is NOT found in git repository
 	printf "%s\\n" "$COMMIT" > "$JDR/var/conf/$USER.${NAME##*/}.${COMMIT::7}.ck"
 	printf "%s\\n" "1" >> "$JDR/var/conf/$USER.${NAME##*/}.${COMMIT::7}.ck"
 	printf "\\n%s\\n\\n" "Could not find an AndroidManifest.xml file in Java language repository $USER ${NAME##*/} ${COMMIT::7}:  NOT downloading ${NAME##*/} tarball."
