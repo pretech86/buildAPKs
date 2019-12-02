@@ -7,7 +7,6 @@ shopt -s nullglob globstar
 export RDR="$HOME/buildAPKs"
 . "$RDR"/scripts/bash/init/ushlibs.bash
 . "$RDR"/scripts/bash/shlibs/trap.bash 67 68 69 "${0##*/}"
-
 _AND_ () { # writes configuration file for git repository tarball if AndroidManifest.xml file is found in git repository
 	printf "%s\\n" "$COMMIT" > "$JDR/var/conf/$USER.${NAME##*/}.${COMMIT::7}.ck"
 	printf "%s\\n" "0" >> "$JDR/var/conf/$USER.${NAME##*/}.${COMMIT::7}.ck"
@@ -91,7 +90,7 @@ _CKAT_ () {
 	CK=0
 	REPO=$(awk -F/ '{print $NF}' <<< "$NAME") # https://stackoverflow.com/questions/2559076/how-do-i-redirect-output-to-a-variable-in-shell 
 	if ! grep -iw "$REPO" "$RDR"/var/db/ANAMES # repository name is not found in ANAMES file
-	then	# proccess repository 
+	then	# process copy and build repository 
 		NPCK="$(find "$JDR/var/conf/" -name "$USER.${NAME##*/}.???????.ck")" ||: # https://stackoverflow.com/questions/6363441/check-if-a-file-exists-with-wildcard-in-shell-script
 		for CKFILE in "$NPCK" 
 		do
@@ -111,7 +110,7 @@ _CKAT_ () {
 			export CK=0
 		done
 	else
-		printf "%s" "Nit proccessing $REPO; found in "$RDR"/var/db/ANAMES file. " 
+		printf "%s" "Nit processing $REPO; found in "$RDR"/var/db/ANAMES file. " 
  	fi
 }
 
@@ -132,7 +131,12 @@ _CUTE_ () { # checks if USENAME is found in GNAMES and if it is an organization 
 		export JDR="$RDR/sources/github/$ISOTUR/$USER"
 		export JID="git.$ISOTUR.$USER"
 	else	# get login and type of login from GitHub
-		mapfile -t TYPE < <(curl "https://api.github.com/users/$USENAME")
+		if [[ "$OAUT" != "" ]] # see .conf/GAUTH file for information 
+		then
+			mapfile -t TYPE < <(curl -u "$OAUT" "https://api.github.com/users/$USENAME")
+		else
+			mapfile -t TYPE < <(curl "https://api.github.com/users/$USENAME")
+		fi
 		if [[ "${TYPE[1]}" == *\"message\":\ \"Not\ Found\"* ]]
 		then
 			printf "\\n%s\\n\\n" "Could not find a GitHub login with $USENAME:  Exiting..."
@@ -140,9 +144,10 @@ _CUTE_ () { # checks if USENAME is found in GNAMES and if it is an organization 
 		fi
 		(if [[ -z "${TYPE[17]}" ]] 
 		then
+			echo "${TYPE[@]}"  
 			_SIGNAL_ "71" "${TYPE[17]} undefined!" "71"
 			exit 34
-		fi) || (_SIGNAL_ "72" "TYPE[17]: unbound variable" "72")
+		fi) || (echo "${TYPE[@]}" && _SIGNAL_ "72" "TYPE[17]: unbound variable" "72")
 		export USENAME="$(printf "%s" "${TYPE[1]}" | sed 's/"//g' | sed 's/,//g' | awk '{print $2}')" || _SIGNAL_ "73" "_CUTE_ \$USENAME"
 		export NAPKS="$(printf "%s" "${TYPE[17]}" | sed 's/"//g' | sed 's/,//g' | awk '{print $2}')" || (_SIGNAL_ "74" "_CUTE_ \$NAPKS: create \$NAPKS failed; Exiting..." 24)
 		if [[ "${TYPE[17]}" == *User* ]]
@@ -175,6 +180,9 @@ _CUTE_ () { # checks if USENAME is found in GNAMES and if it is an organization 
 	then	# add one more page to total reqest
 		RPCT="$(($RPCT+1))"
 	fi
+}
+
+_GETREPOS_() {
 	if [[ ! -f "$JDR/repos" ]] # file repos does not exist 
 	then	# get repository information
 		until [[ $RPCT -eq 0 ]] # there are zero pages remaining
@@ -210,13 +218,16 @@ _MKJDC_ () {
 	if [[ ! -d "$JDR/var/conf" ]] 
 	then
 		mkdir -p "$JDR/var/conf"
-		printf "%s\\n\\n" "This directory contains results from query for \` AndroidManifest.xml \` files in GitHub $USENAME repositores.  
-		| file name | purpose |
-		-----------------------
-		| *.ck      | commit and AndroidManifest.xml query result | 
-		| NAMES.db  | NAMES files proccessed | 
-		| NAMFS.db  | number of AndroidManifest.xml files found | 
-		| NAPKS.db  | number of APKs built |  " > "$JDR/var/conf/README.md" 
+	fi
+	if [[ ! -d "$JDR/var/conf" ]] 
+	then
+	printf "%s\\n\\n" "This directory contains query for \` AndroidManifest.xml \` files in GitHub $USENAME repositores results.  The following files are created in ${USENAME,,}/var/conf and their purpose is outlined here:
+	| file name | purpose |
+	-----------------------
+	| *.ck      | results from query for commit and AndroidManifest.xml file(s) | 
+	| NAMES.db  | var/db/*NAMES* files processedthrough var/db/*NAMES;  Remove this file to reprocess login through var/db/*NAMES upon susequent build. | 
+	| NAMFS.db  | The number of AndroidManifest.xml files that were found at login https://github.com/$USENAME. | 
+	| NAPKS.db  | The number of APKs that were built on device with BuildAPKs. |  " > "$JDR/var/conf/README.md" 
 	fi
 }
 
@@ -270,6 +281,8 @@ _MAINGITHUB_ () {
 	else	# check whether login is a user or an organization
 		_CUTE_
 	fi
+	_WAKELOCK_
+	_GETREPOS_
 	_PRINTJS_
 	JARR=($(grep -v JavaScript "$JDR/repos" | grep -B 5 Java | grep svn_url | awk -v x=2 '{print $x}' | sed 's/\,//g' | sed 's/\"//g')) ||: # creates array of Java language repositories	
 	_PRINTJD_
