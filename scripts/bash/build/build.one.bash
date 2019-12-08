@@ -13,13 +13,13 @@ _SBOTRPERROR_() { # run on script error
 	then 
 		printf "\\e[?25h\\e[1;7;38;5;0mOn Signal 255 try running %s again if the error includes R.java and similar; This error might have been corrected by clean up.  More information in \`%s/var/log/stnderr.%s.log\` file.\\e[0m\\n" "${0##*/}" "$RDR" "$JID" 
 	fi
-	_CLEANUP_
+ 	_CLEANUP_
 	exit 160
 }
 
 _SBOTRPEXIT_() { # run on exit
 	local RV="$?"
-	if [[ "$RV" != 0 ]]  
+	if [[ "$RV" != 0 ]] &&  [[ "$RV" != 224 ]]  
 	then 
 		printf "\\e[?25h\\e[1;7;38;5;0mbuildAPKs signal %s received by %s in %s by build.one.bash.  More information in \`%s/var/log/stnderr.%s.log\` file.\\n\\n" "$RV" "${0##*/}" "$PWD" "$RDR" "$JID" 
 		printf "%s\\n" "Running: grep -iC 4 ERROR $RDR/var/log/stnderr.$JID.log | tail "
@@ -38,9 +38,12 @@ _SBOTRPEXIT_() { # run on exit
 	fi
 	if [[ "$RV" = 224 ]]  
 	then 
-		printf "\\e[?25h\\e[1;7;38;5;0mSignal 224 generated in %s;  Cannot run in $HOME!  See \`stnderr*.log\` file.\\n\\nRunning \`ls\`:\\e[0m\\n" "$PWD" "${0##*/}" "${0##*/}"
+		printf "\\e[?25h\\e[1;7;38;5;0mSignal 224 generated in %s;  Cannot run in %s; %s exiting...\\e[0m\\n" "$PWD" "$HOME" "${0##*/} build.one.bash"
 	fi
-	_CLEANUP_
+	if [[ "$RV" != 224 ]]  
+	then 
+ 		_CLEANUP_
+	fi
 	printf "\\e[?25h\\e[0m"
 	set +Eeuo pipefail 
 	exit 0
@@ -53,7 +56,7 @@ _SBOTRPSIGNAL_() { # run on signal
 
 _SBOTRPQUIT_() { # run on quit
 	printf "\\e[?25h\\e[1;7;38;5;0mbuildAPKs %s WARNING:  Quit signal %s received by build.one.bash!\\e[0m\\n" "${0##*/}" "$?"
-	_CLEANUP_
+ 	_CLEANUP_
  	exit 162 
 }
 
@@ -73,13 +76,17 @@ _CLEANUP_ () {
 	printf "\\e[1;38;5;151mCompleted tasks in %s\\n\\n\\e[0m" "$PWD"
 }
 
-if [[ -z "${DAY:-}" ]] 
-then
-	DAY="$(date +%Y.%m.%d)"
-fi
 if [[ -z "${RDR:-}" ]] 
 then
 	RDR="$HOME/buildAPKs"
+fi
+if [[ "$PWD" = "$HOME" ]] 
+then
+	exit 224
+fi
+if [[ -z "${DAY:-}" ]] 
+then
+	DAY="$(date +%Y.%m.%d)"
 fi
 if [[ -z "${2:-}" ]] 
 then
@@ -92,11 +99,6 @@ fi
 if [[ -z "${NUM:-}" ]] 
 then
 	NUM=""
-fi
-if [[ "$PWD" = "$HOME" ]] 
-then
-	echo "Cannot run in $HOME!  Signal 224 generated in $PWD."
-	exit 224
 fi
 printf "\\e[0m\\n\\e[1;38;5;116mBeginning build in %s\\n\\e[0m" "$PWD"
 if [[ ! -e "./assets" ]]
@@ -119,38 +121,43 @@ if [[ ! -d "./res" ]]
 then
 	mkdir -p ./res
 fi
-sleep 0.01
-MSDKVERSIO="$(getprop ro.build.version.min_supported_target_sdk)" ||:
+BOOTCLASSPATH=""
+[ -d /system ] && DIRLIST="$(find -L /system/ -type f -iname "*.jar" -or -iname "*.apk" 2>/dev/null)" ||:
+for LIB in $DIRLIST
+do
+	BOOTCLASSPATH=${LIB}:${BOOTCLASSPATH};
+done
+BOOTCLASSPATH=${BOOTCLASSPATH%%:}
+NOW=$(date +%s)
+MSDKVERSIO="$(getprop ro.build.version.min_supported_target_sdk)" || printf "%s" "signal ro.build.version.min_supported_target_sdk ${0##*/} build.one.bash generated; Continuing...  "
 MSDKVERSION="${MSDKVERSIO:-14}"
-TSDKVERSIO="$(getprop ro.build.version.sdk)" ||:
+PKGNAM="$(grep -o "package=.*" AndroidManifest.xml | cut -d\" -f2)"
+PKGNAME="$PKGNAM.$NOW"
+TSDKVERSIO="$(getprop ro.build.version.sdk)" || printf "%s" "Signal ro.build.version.sdk ${0##*/} build.one.bash generated; Continuing...  "
 TSDKVERSION="${TSDKVERSIO:-23}"
 sed -i "s/minSdkVersion\=\"[0-9]\"/minSdkVersion\=\"$MSDKVERSION\"/g" AndroidManifest.xml 
 sed -i "s/minSdkVersion\=\"[0-9][0-9]\"/minSdkVersion\=\"$MSDKVERSION\"/g" AndroidManifest.xml 
 sed -i "s/targetSdkVersion\=\"[0-9]\"/targetSdkVersion\=\"$TSDKVERSION\"/g" AndroidManifest.xml 
 sed -i "s/targetSdkVersion\=\"[0-9][0-9]\"/targetSdkVersion\=\"$TSDKVERSION\"/g" AndroidManifest.xml 
-NOW=$(date +%s)
-PKGNAM="$(grep -o "package=.*" AndroidManifest.xml | cut -d\" -f2)"
-PKGNAME="$PKGNAM.$NOW"
 printf "\\e[1;38;5;115m%s\\n\\e[0m" "aapt: started..."
 aapt package -f \
+	--min-sdk-version "$MSDKVERSION" --target-sdk-version "$TSDKVERSION" --version-code "$NOW" --version-name "$PKGNAM" -c "$(getprop persist.sys.locale|awk -F- '{print $1}')" \
 	-M AndroidManifest.xml \
 	-J gen \
-	-S res 
+	-S res
 printf "\\e[1;38;5;148m%s;  \\e[1;38;5;114m%s\\n\\e[0m" "aapt: done" "ecj: begun..."
-ecj -d ./obj -sourcepath . $(find . -type f -name "*.java")
+ecj -bootclasspath $BOOTCLASSPATH -d ./obj -sourcepath . $(find . -type f -name "*.java") 
 printf "\\e[1;38;5;149m%s;  \\e[1;38;5;113m%s\\n\\e[0m" "ecj: done" "dx: started..."
 dx --dex --output=bin/classes.dex obj
 printf "\\e[1;38;5;148m%s;  \\e[1;38;5;112m%s\\n\\e[0m" "dx: done" "Making $PKGNAM.apk..."
 aapt package -f \
-	--min-sdk-version "$MSDKVERSION" \
-	--target-sdk-version "$TSDKVERSION" \
 	-M AndroidManifest.xml \
 	-S res \
 	-A assets \
-	-F bin/"$PKGNAM".apk
+	-F bin/"$PKGNAM".apk 
 printf "\\e[1;38;5;113m%s\\e[1;38;5;107m\\n" "Adding classes.dex to $PKGNAM.apk..."
 cd bin 
-aapt add -f "$PKGNAM.apk" classes.dex
+aapt add -f "$PKGNAM.apk" classes.dex 
 printf "\\e[1;38;5;114m%s\\e[1;38;5;108m\\n" "Signing $PKGNAM.apk..."
 apksigner ../"$PKGNAM-debug.key" "$PKGNAM.apk" ../"$PKGNAM.apk"
 cd ..
