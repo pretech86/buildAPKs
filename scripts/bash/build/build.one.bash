@@ -22,8 +22,8 @@ _SBOTRPEXIT_() { # run on exit
 	if [[ "$RV" != 0 ]] &&  [[ "$RV" != 224 ]]  
 	then 
 		printf "\\e[?25h\\e[1;7;38;5;0mbuildAPKs signal %s received by %s in %s by build.one.bash.  More information in \`%s/var/log/stnderr.%s.log\` file.\\n\\n" "$RV" "${0##*/}" "$PWD" "$RDR" "$JID" 
-		printf "%s\\n" "Running: grep -iC 4 ERROR $RDR/var/log/stnderr.$JID.log | tail "
-		grep -iC 4 ERROR "$RDR/var/log/stnderr.$JID.log" | tail 
+		printf "%s\\n" "Running: grep -iC 4 ERROR $RDR/var/log/stnderr.$JID.log | head "
+		grep -iC 4 ERROR "$RDR/var/log/stnderr.$JID.log" | head 
 		printf "\\e[0m\\n\\n" 
 	fi
 	if [[ "$RV" = 220 ]]  
@@ -122,10 +122,12 @@ then
 	mkdir -p ./res
 fi
 BOOTCLASSPATH=""
+SYSJCLASSPATH=""
 [ -d /system ] && DIRLIST="$(find -L /system/ -type f -iname "*.jar" -or -iname "*.apk" 2>/dev/null)" ||:
 for LIB in $DIRLIST
 do
 	BOOTCLASSPATH=${LIB}:${BOOTCLASSPATH};
+	SYSJCLASSPATH="-I $LIB $SYSJCLASSPATH"
 done
 BOOTCLASSPATH=${BOOTCLASSPATH%%:}
 NOW=$(date +%s)
@@ -142,6 +144,7 @@ sed -i "s/targetSdkVersion\=\"[0-9][0-9]\"/targetSdkVersion\=\"$TSDKVERSION\"/g"
 printf "\\e[1;38;5;115m%s\\n\\e[0m" "aapt: started..."
 aapt package -f \
 	--min-sdk-version "$MSDKVERSION" --target-sdk-version "$TSDKVERSION" --version-code "$NOW" --version-name "$PKGNAM" -c "$(getprop persist.sys.locale|awk -F- '{print $1}')" \
+	-j $BOOTCLASSPATH $SYSJCLASSPATH \
 	-M AndroidManifest.xml \
 	-J gen \
 	-S res
