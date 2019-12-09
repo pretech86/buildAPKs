@@ -22,8 +22,8 @@ _SBOTRPEXIT_() { # run on exit
 	if [[ "$RV" != 0 ]] &&  [[ "$RV" != 224 ]]  
 	then 
 		printf "\\e[?25h\\e[1;7;38;5;0mbuildAPKs signal %s received by %s in %s by build.one.bash.  More information in \`%s/var/log/stnderr.%s.log\` file.\\n\\n" "$RV" "${0##*/}" "$PWD" "$RDR" "$JID" 
-		printf "%s\\n" "Running: grep -iC 4 ERROR $RDR/var/log/stnderr.$JID.log | head "
-		grep -iC 4 ERROR "$RDR/var/log/stnderr.$JID.log" | head 
+		printf "%s\\n" "Running: grep -iC 4 ERROR $RDR/var/log/stnderr.$JID.log | tail -n 18 "
+		grep -iC 4 ERROR "$RDR/var/log/stnderr.$JID.log" | tail -n 18 
 		printf "\\e[0m\\n\\n" 
 	fi
 	if [[ "$RV" = 220 ]]  
@@ -123,7 +123,8 @@ then
 fi
 BOOTCLASSPATH=""
 SYSJCLASSPATH=""
-[ -d /system ] && DIRLIST="$(find -L /system/ -type f -iname "*.jar" -or -iname "*.apk" 2>/dev/null)" ||:
+[ -d "$RDR"/var/cache/lib ] && DIRLIST="$(find -L "$RDR"/var/cache/lib/ -type f -iname "*.aar" -or -iname "*.jar" -or -iname "*.apk" 2>/dev/null)" ||:
+[ -d /system ] && DIRLIST="$DIRLIST $(find -L /system/ -type f -iname "*.aar" -or -iname "*.jar" -or -iname "*.apk" 2>/dev/null)" ||:
 for LIB in $DIRLIST
 do
 	BOOTCLASSPATH=${LIB}:${BOOTCLASSPATH};
@@ -143,17 +144,18 @@ sed -i "s/targetSdkVersion\=\"[0-9]\"/targetSdkVersion\=\"$TSDKVERSION\"/g" Andr
 sed -i "s/targetSdkVersion\=\"[0-9][0-9]\"/targetSdkVersion\=\"$TSDKVERSION\"/g" AndroidManifest.xml 
 printf "\\e[1;38;5;115m%s\\n\\e[0m" "aapt: started..."
 aapt package -f \
-	--min-sdk-version "$MSDKVERSION" --target-sdk-version "$TSDKVERSION" --version-code "$NOW" --version-name "$PKGNAM" -c "$(getprop persist.sys.locale|awk -F- '{print $1}')" \
-	-j $BOOTCLASSPATH $SYSJCLASSPATH \
+ 	--min-sdk-version "$MSDKVERSION" --target-sdk-version "$TSDKVERSION" --version-code "$NOW" --version-name "$PKGNAM" -c "$(getprop persist.sys.locale|awk -F- '{print $1}')" \
+ 	-j $BOOTCLASSPATH $SYSJCLASSPATH \
 	-M AndroidManifest.xml \
 	-J gen \
 	-S res
 printf "\\e[1;38;5;148m%s;  \\e[1;38;5;114m%s\\n\\e[0m" "aapt: done" "ecj: begun..."
-ecj -bootclasspath $BOOTCLASSPATH -d ./obj -sourcepath . $(find . -type f -name "*.java") 
+ecj -bootclasspath $BOOTCLASSPATH -d ./obj -extdirs $BOOTCLASSPATH -sourcepath . $(find . -type f -name "*.java") 
 printf "\\e[1;38;5;149m%s;  \\e[1;38;5;113m%s\\n\\e[0m" "ecj: done" "dx: started..."
 dx --dex --output=bin/classes.dex obj
 printf "\\e[1;38;5;148m%s;  \\e[1;38;5;112m%s\\n\\e[0m" "dx: done" "Making $PKGNAM.apk..."
 aapt package -f \
+ 	--min-sdk-version "$MSDKVERSION" --target-sdk-version "$TSDKVERSION" \
 	-M AndroidManifest.xml \
 	-S res \
 	-A assets \
