@@ -22,8 +22,8 @@ _SBOTRPEXIT_() { # run on exit
 	if [[ "$RV" != 0 ]] &&  [[ "$RV" != 224 ]]  
 	then 
 		printf "\\e[?25h\\e[1;7;38;5;0mbuildAPKs signal %s received by %s in %s by build.one.bash.  More information in \`%s/var/log/stnderr.%s.log\` file.\\n\\n" "$RV" "${0##*/}" "$PWD" "$RDR" "$JID" 
-		printf "%s\\n" "Running: grep -iC 4 ERROR $RDR/var/log/stnderr.$JID.log | tail -n 18 "
-		grep -iC 4 ERROR "$RDR/var/log/stnderr.$JID.log" | tail -n 18 
+		printf "%s\\n" "Running: grep -iC 4 ERROR $RDR/var/log/stnderr.$JID.log | tail "
+		grep -iC 4 ERROR "$RDR/var/log/stnderr.$JID.log" | tail 
 		printf "\\e[0m\\n\\n" 
 	fi
 	if [[ "$RV" = 220 ]]  
@@ -76,30 +76,12 @@ _CLEANUP_ () {
 	printf "\\e[1;38;5;151mCompleted tasks in %s\\n\\n\\e[0m" "$PWD"
 }
 
-if [[ -z "${RDR:-}" ]] 
-then
-	RDR="$HOME/buildAPKs"
-fi
-if [[ "$PWD" = "$HOME" ]] 
-then
-	exit 224
-fi
-if [[ -z "${DAY:-}" ]] 
-then
-	DAY="$(date +%Y.%m.%d)"
-fi
-if [[ -z "${2:-}" ]] 
-then
-	JDR="$PWD"
-fi
-if [[ -z "${JID:-}" ]] 
-then
-	JID="${PWD##*/}" # https://www.tldp.org/LDP/abs/html/parameter-substitution.html 
-fi
-if [[ -z "${NUM:-}" ]] 
-then
-	NUM=""
-fi
+[ -z "${RDR:-}" ] && RDR="$HOME/buildAPKs"
+[ "$PWD" = "$HOME" ] && exit 224
+[ -z "${DAY:-}" ] && DAY="$(date +%Y.%m.%d)"
+[ -z "${2:-}" ] && JDR="$PWD"
+[ -z "${JID:-}" ] && JID="${PWD##*/}" # https://www.tldp.org/LDP/abs/html/parameter-substitution.html 
+[ -z "${NUM:-}" ] && NUM=""
 printf "\\e[0m\\n\\e[1;38;5;116mBeginning build in %s\\n\\e[0m" "$PWD"
 if [[ ! -e "./assets" ]]
 then
@@ -123,8 +105,10 @@ then
 fi
 BOOTCLASSPATH=""
 SYSJCLASSPATH=""
-[ -d "$RDR"/var/cache/lib ] && DIRLIST="$(find -L "$RDR"/var/cache/lib/ -type f -iname "*.aar" -or -iname "*.jar" -or -iname "*.apk" 2>/dev/null)" ||:
-[ -d /system ] && DIRLIST="$DIRLIST $(find -L /system/ -type f -iname "*.aar" -or -iname "*.jar" -or -iname "*.apk" 2>/dev/null)" ||:
+[ -d "$RDR"/var/cache/lib ] && DIRLIST="$(find -L "$RDR"/var/cache/lib -type f -name "*.aar" -or -type f -name "*.jar" -or -type f -name "*.apk" 2>/dev/null)" ||:  
+[ -d "$JDR"/../lib* ] && DIRLIST="$DIRLIST $(find -L "$JDR"/../lib* -type f -name "*.aar" -or -type f -name "*.jar" -or -type f -name "*.apk" 2>/dev/null)" ||:  
+[ -d "$JDR"/lib* ] && DIRLIST="$DIRLIST $(find -L "$JDR"/lib* -type f -name "*.aar" -or -type f -name "*.jar" -or -type f -name "*.apk" 2>/dev/null)" ||:  
+[ -d /system ] && DIRLIST="$DIRLIST $(find -L /system -type f -name "*.aar" -or -type f -name "*.jar" -or -type f -name "*.apk" 2>/dev/null)" ||: 
 for LIB in $DIRLIST
 do
 	BOOTCLASSPATH=${LIB}:${BOOTCLASSPATH};
@@ -150,7 +134,7 @@ aapt package -f \
 	-J gen \
 	-S res
 printf "\\e[1;38;5;148m%s;  \\e[1;38;5;114m%s\\n\\e[0m" "aapt: done" "ecj: begun..."
-ecj -bootclasspath $BOOTCLASSPATH -d ./obj -extdirs $BOOTCLASSPATH -sourcepath . $(find . -type f -name "*.java") 
+ecj -bootclasspath $BOOTCLASSPATH -d ./obj -classpath $BOOTCLASSPATH -sourcepath . $(find . -type f -name "*.java") 
 printf "\\e[1;38;5;149m%s;  \\e[1;38;5;113m%s\\n\\e[0m" "ecj: done" "dx: started..."
 dx --dex --output=bin/classes.dex obj
 printf "\\e[1;38;5;148m%s;  \\e[1;38;5;112m%s\\n\\e[0m" "dx: done" "Making $PKGNAM.apk..."

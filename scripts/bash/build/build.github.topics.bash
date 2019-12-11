@@ -7,15 +7,8 @@ shopt -s nullglob globstar
 export RDR="$HOME/buildAPKs"
 . "$RDR"/scripts/bash/init/ushlibs.bash
 . "$RDR"/scripts/bash/shlibs/trap.bash 77 78 79 "${0##*/}"
-if [[ -z "${1:-}" ]] 
-then
-	printf "\\e[1;7;38;5;203m%s\\e[1;7;38;5;201m%s\\e[1;7;38;5;203m%s\\e[1;7;38;5;201m%s\\e[1;7;38;5;203m%s\\e[1;7;38;5;201m%s\\e[1;7;38;5;203m%s\\n\\e[0m\\n" "GitHub topic name must be provided;  See " "~/${RDR##*/}/var/conf/TNAMES" " for topic names that build APKs on device with BuildAPKs!  To build all the topic names contained in this file run " "for NAME in \$(cat ~/${RDR##*/}/var/conf/TNAMES) ; do ~/${RDR##*/}/scripts/bash/build/${0##*/} \$NAME ; done" ".  File " "~/${RDR##*/}/var/conf/GAUTH" " has important information should you choose to run this command regarding bandwidth supplied by GitHub. "
-	exit 4
-fi
-if [[ -z "${NUM:-}" ]] 
-then
-	export NUM="$(date +%s)"
-fi
+[ -z "${1:-}" ] && printf "\\e[1;7;38;5;203m%s\\e[1;7;38;5;201m%s\\e[1;7;38;5;203m%s\\e[1;7;38;5;201m%s\\e[1;7;38;5;203m%s\\e[1;7;38;5;201m%s\\e[1;7;38;5;203m%s\\n\\e[0m\\n" "GitHub topic name must be provided;  See " "~/${RDR##*/}/var/conf/TNAMES" " for topic names that build APKs on device with BuildAPKs!  To build all the topic names contained in this file run " "for NAME in \$(cat ~/${RDR##*/}/var/conf/TNAMES) ; do ~/${RDR##*/}/scripts/bash/build/${0##*/} \$NAME ; done" ".  File " "~/${RDR##*/}/var/conf/GAUTH" " has important information should you choose to run this command regarding bandwidth supplied by GitHub. " && exit 4
+[ -z "${NUM:-}" ] && export NUM="$(date +%s)"
 . "$RDR"/scripts/bash/shlibs/lock.bash wake.lock 
 . "$RDR"/scripts/bash/shlibs/buildAPKs/bnchn.bash bch.st 
 export TOPI="${1%/}"
@@ -34,17 +27,14 @@ _RPCT_() {
 		export RPCT="$(($RPCT+1))"
 	fi
 	printf "%s\\n" "Found $RPCT pages of results." 
-	if [[ $RPCT -gt 10 ]] # greater than 1000 search results 
-	then	# enforce https://developer.github.com/v3/search/ limit 
-		printf "%s\\n" "Limiting to 10 pages of results." 
+	if [[ $RPCT -gt 10 ]] # the repository count is greater than 1000 search results, which is 10 pages at 100 results per page 
+	then	# enforce the https://developer.github.com/v3/search/ search limit of 1000 search results per query
+		printf "%s\\n" "Limiting to 10 pages of results per query." 
 		export RPCT=10
 	fi
 }
 printf "\\n\\e[1;38;5;116m%s\\n\\e[0m" "${0##*/}: Beginning BuildAPKs with build.github.topics.bash $@:"
-if [[ ! -d "$JDR" ]] 
-then
-	mkdir -p "$JDR"
-fi
+[ ! -d "$JDR" ] && mkdir -p "$JDR"
 if [[ ! -f "$JDR"/topic ]] 
 then
 	if [[ ! -z "$OAUT" ]] # see .conf/GAUTH file for information
