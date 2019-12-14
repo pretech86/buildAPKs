@@ -1,4 +1,4 @@
-#!/bin/env bash 
+#!/usr/bin/env bash
 # Copyright 2017-2019 (c) all rights reserved by S D Rausty 
 # Adapted from https://github.com/fx-adi-lima/android-tutorials
 #####################################################################
@@ -78,43 +78,52 @@ _CLEANUP_ () {
 
 [ -z "${RDR:-}" ] && RDR="$HOME/buildAPKs"
 [ "$PWD" = "$HOME" ] && exit 224
-[ -z "${DAY:-}" ] && DAY="$(date +%Y.%m.%d)"
+printf "\\e[0m\\n\\e[1;38;5;116mBeginning build in %s\\n\\e[0m" "$PWD"
+[ -z "${DAY:-}" ] && DAY="$(date +%Y%m%d)"
 [ -z "${2:-}" ] && JDR="$PWD"
 [ -z "${JID:-}" ] && JID="${PWD##*/}" # https://www.tldp.org/LDP/abs/html/parameter-substitution.html 
 [ -z "${NUM:-}" ] && NUM=""
-printf "\\e[0m\\n\\e[1;38;5;116mBeginning build in %s\\n\\e[0m" "$PWD"
-if [[ ! -e "./assets" ]]
-then
-	mkdir -p ./assets
+[ ! -e "./assets" ] && mkdir -p ./assets
+[ ! -e "./bin" ] && mkdir -p ./bin
+[ ! -e "./gen" ] && mkdir -p ./gen
+[ ! -e "./obj" ] && mkdir -p ./obj
+[ ! -e "./res" ] && mkdir -p ./res
+LIBAU="$(cat "$RDR/.conf/LIBAUTH" | awk 'NR==1')" # load true/false from $RDR/.conf/LIBAUTH file, see the LIBAUTH file for more information to enable loading of artifacts and libraries into the build process. 
+if [[ "$LIBAU" == true ]]
+then # load artifacts and libraries into the build process.
+	printf "\\e[1;34m%s" "Loading artifacts and libraries into the compilation:  "
+	BOOTCLASSPATH=""
+	SYSJCLASSPATH=""
+	DIRLIST=""
+	LIBDIRPATH=("$JDR/../../../lib" "$JDR/../../../libraries" "$JDR/../../../library" "$JDR/../../../libs" "$JDR/../../lib" "$JDR/../../libraries" "$JDR/../../library" "$JDR/../../libs" "$JDR/../lib" "$JDR/../libraries" "$JDR/../library" "$JDR/../libs" "$RDR/var/cache/lib" "$JDR/lib" "$JDR/libraries" "$JDR/library" "$JDR/libs" "/system") # modify array LIBDIRPATH to suit the projects artifact needs.  
+	for LIBDIR in ${LIBDIRPATH[@]} # every element in array LIBDIRPATH 
+	do	# directory path check
+	 	if [[ -d "$LIBDIR" ]] # library directory exists
+		then	# search directory for artifacts and libraries
+			DIRLIS="$(find -L "$LIBDIR" -type f -name "*.aar" -or -type f -name "*.jar" -or -type f -name "*.apk" -or -type f -name "*.vdex" 2>/dev/null)"||:
+			DIRLIST="$DIRLIST $DIRLIS"
+			NUMIA=$(wc -l <<< $DIRLIST)
+	 		if [[ $DIRLIS == "" ]] # nothing was found 
+			then	# adjust ` wc -l ` count to zero
+				NUMIA=0
+			fi
+			printf "\\e[1;34m%s" "Adding $NUMIA artifacts and libraries from directory "$LIBDIR" into build "${PWD##*/}":  "
+		fi
+	done
+	for LIB in $DIRLIST
+	do
+		BOOTCLASSPATH=${LIB}:${BOOTCLASSPATH};
+		SYSJCLASSPATH="-I $LIB $SYSJCLASSPATH"
+	done
+	BOOTCLASSPATH=${BOOTCLASSPATH%%:}
+ 	APTENT=" -j $BOOTCLASSPATH $SYSJCLASSPATH " 
+ 	ECJENT=" -bootclasspath $BOOTCLASSPATH "
+	printf "\\e[1;32m\\bDONE\\e[0m\\n"
+else # do not load artifacts and libraries into the build process.
+	printf "\\e[1;34m%s\\n" "To load artifacts and libraries into the compilation see the ~/"${RDR##*/}"/.conf/LIBAUTH file. "
+ 	APTENT=""
+ 	ECJENT=""
 fi
-if [[ ! -d "./bin" ]]
-then
-	mkdir -p ./bin
-fi
-if [[ ! -d "./gen" ]]
-then
-	mkdir -p ./gen
-fi
-if [[ ! -d "./obj" ]]
-then
-	mkdir -p ./obj
-fi
-if [[ ! -d "./res" ]]
-then
-	mkdir -p ./res
-fi
-BOOTCLASSPATH=""
-SYSJCLASSPATH=""
-[ -d "$RDR"/var/cache/lib ] && DIRLIST="$(find -L "$RDR"/var/cache/lib -type f -name "*.aar" -or -type f -name "*.jar" -or -type f -name "*.apk" 2>/dev/null)" ||:  
-[ -d "$JDR"/../lib* ] && DIRLIST="$DIRLIST $(find -L "$JDR"/../lib* -type f -name "*.aar" -or -type f -name "*.jar" -or -type f -name "*.apk" 2>/dev/null)" ||:  
-[ -d "$JDR"/lib* ] && DIRLIST="$DIRLIST $(find -L "$JDR"/lib* -type f -name "*.aar" -or -type f -name "*.jar" -or -type f -name "*.apk" 2>/dev/null)" ||:  
-[ -d /system ] && DIRLIST="$DIRLIST $(find -L /system -type f -name "*.aar" -or -type f -name "*.jar" -or -type f -name "*.apk" 2>/dev/null)" ||: 
-for LIB in $DIRLIST
-do
-	BOOTCLASSPATH=${LIB}:${BOOTCLASSPATH};
-	SYSJCLASSPATH="-I $LIB $SYSJCLASSPATH"
-done
-BOOTCLASSPATH=${BOOTCLASSPATH%%:}
 NOW=$(date +%s)
 MSDKVERSIO="$(getprop ro.build.version.min_supported_target_sdk)" || printf "%s" "signal ro.build.version.min_supported_target_sdk ${0##*/} build.one.bash generated; Continuing...  "
 MSDKVERSION="${MSDKVERSIO:-14}"
@@ -129,12 +138,12 @@ sed -i "s/targetSdkVersion\=\"[0-9][0-9]\"/targetSdkVersion\=\"$TSDKVERSION\"/g"
 printf "\\e[1;38;5;115m%s\\n\\e[0m" "aapt: started..."
 aapt package -f \
  	--min-sdk-version "$MSDKVERSION" --target-sdk-version "$TSDKVERSION" --version-code "$NOW" --version-name "$PKGNAM" -c "$(getprop persist.sys.locale|awk -F- '{print $1}')" \
- 	-j $BOOTCLASSPATH $SYSJCLASSPATH \
+ 	$APTENT \
 	-M AndroidManifest.xml \
 	-J gen \
 	-S res
 printf "\\e[1;38;5;148m%s;  \\e[1;38;5;114m%s\\n\\e[0m" "aapt: done" "ecj: begun..."
-ecj -bootclasspath $BOOTCLASSPATH -d ./obj -classpath $BOOTCLASSPATH -sourcepath . $(find . -type f -name "*.java") 
+ecj $ECJENT -d ./obj -sourcepath . $(find . -type f -name "*.java") 
 printf "\\e[1;38;5;149m%s;  \\e[1;38;5;113m%s\\n\\e[0m" "ecj: done" "dx: started..."
 dx --dex --output=bin/classes.dex obj
 printf "\\e[1;38;5;148m%s;  \\e[1;38;5;112m%s\\n\\e[0m" "dx: done" "Making $PKGNAM.apk..."

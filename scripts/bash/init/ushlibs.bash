@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 # Copyright 2017-2019 (c) all rights reserved 
 # by S D Rausty https://sdrausty.github.io
 # installs and updates submodules from https://github.com/shlibs
@@ -50,12 +50,7 @@ _UFSHLIBS_() { # add and update submodules
 }
 
 cd "$RDR"
-if [[ ! -d "$RDR"/.git ]] 
-then
-	_IRGR_
-	sleep 0.$(shuf -i 24-72 -n 1) # add network latency support on fast networks 
-	_IFSHLIBS_
-fi
+[ ! -d "$RDR"/.git ] && _IRGR_ && sleep 0.$(shuf -i 24-72 -n 1) && _IFSHLIBS_
 if [[ ! -f "$RDR"/scripts/bash/shlibs/.git ]] || [[ ! -f "$RDR"/scripts/sh/shlibs/.git ]] 
 then
 	git pull || printf "\\nCannot update ~/%s: Continuing...\\n\\n" "${RDR##*/}"
