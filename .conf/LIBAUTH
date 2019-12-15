@@ -4,10 +4,24 @@ false
 =========
 Change the first line of this file to true to use artifacts and libraries during compilation; When the first line of this file is changed to true, BuildAPKs loads the files in the following folders into the build process from directories located in:
 
-$RDR/var/cache/lib 
-$JDR/../lib*
-$JDR/lib*
-/system 
+$JDR/../../../lib
+$JDR/../../../libraries
+$JDR/../../../library
+$JDR/../../../libs
+$JDR/../../lib
+$JDR/../../libraries
+$JDR/../../library
+$JDR/../../libs
+$JDR/../lib
+$JDR/../libraries
+$JDR/../library
+$JDR/../libs
+$RDR/var/cache/lib
+$JDR/lib
+$JDR/libraries
+$JDR/library
+$JDR/libs
+/system
 
 You can populate the ~/buildAPKs/var/cache/lib directory from the https://mvnrepository.com website.  For example, this link https://mvnrepository.com/artifact/androidx.appcompat/appcompat has appcompat libraries that you can download into ~/buildAPKs/var/cache/lib for compiling inclusion.
 
@@ -18,10 +32,24 @@ The command ` cd ~/buildAPKs/var/cache/lib && curl -OL https://maven.google.com/
 =========
 Cambie la primera línea de este archivo a true para usar artefactos y bibliotecas durante la compilación; Cuando la primera línea de esto se cambia a true, BuildAPKs carga los siguientes archivos de carpeta en el proceso de compilación desde directorios ubicados en: 
 
-$RDR/var/cache/lib 
-$JDR/../lib*
-$JDR/lib*
-/system 
+$JDR/../../../lib
+$JDR/../../../libraries
+$JDR/../../../library
+$JDR/../../../libs
+$JDR/../../lib
+$JDR/../../libraries
+$JDR/../../library
+$JDR/../../libs
+$JDR/../lib
+$JDR/../libraries
+$JDR/../library
+$JDR/../libs
+$RDR/var/cache/lib
+$JDR/lib
+$JDR/libraries
+$JDR/library
+$JDR/libs
+/system
 
 Puede llenar el directorio ~/buildAPKs/var/cache/lib desde el sitio https://mvnrepository.com web. Por ejemplo, este enlace https://mvnrepository.com/artifact/androidx.appcompat/appcompat contiene bibliotecas appcompat que puede descargar en ~/buildAPKs/var/cache/lib para compilar la inclusión. 
 
@@ -33,10 +61,24 @@ https://github.com/BuildAPKs tiene que ofrecer incluyendo appcompat-1.1.0.aar y 
 ===========
 Modifiez la première ligne de ce fichier sur true pour utiliser des artefacts et des bibliothèques pendant la compilation; Lorsque la première ligne de cette est changé en true, BuildAPKs charge les fichiers de dossier suivants dans le processus de génération à partir de répertoires situés dans:
 
-$RDR/var/cache/lib 
-$JDR/../lib*
-$JDR/lib*
-/system 
+$JDR/../../../lib
+$JDR/../../../libraries
+$JDR/../../../library
+$JDR/../../../libs
+$JDR/../../lib
+$JDR/../../libraries
+$JDR/../../library
+$JDR/../../libs
+$JDR/../lib
+$JDR/../libraries
+$JDR/../library
+$JDR/../libs
+$RDR/var/cache/lib
+$JDR/lib
+$JDR/libraries
+$JDR/library
+$JDR/libs
+/system
 
 Vous pouvez remplir le répertoire ~/buildAPKs/var/cache/lib à partir du site https://mvnrepository.com Web. Par exemple, ce lien https://mvnrepository.com/artifact/androidx.appcompat/appcompat contient des bibliothèques appcompat que vous pouvez télécharger dans ~/buildAPKs/var/cache/lib pour compiler l'inclusion.
 
