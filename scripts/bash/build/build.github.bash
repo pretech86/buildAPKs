@@ -286,7 +286,7 @@ _MAINGITHUB_ () {
 	_WAKELOCK_
 	_GETREPOS_
 	_PRINTJS_
-	JARR=($(grep -v JavaScript "$JDR/repos" | grep -B 5 -e Java -e Shell -e Kotlin | grep svn_url | awk -v x=2 '{print $x}' | sed 's/\,//g' | sed 's/\"//g')) ||: # creates array of Java language repositories	
+	JARR=($(grep -B 5 -e JavaScript -e Java -e Shell -e Kotlin "$JDR/repos" | grep svn_url | awk -v x=2 '{print $x}' | sed 's/\,//g' | sed 's/\"//g')) ||: # creates array of Java language repositories	
 	_PRINTJD_
 	if [[ "${JARR[@]}" == *ERROR* ]]
 	then
