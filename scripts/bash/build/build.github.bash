@@ -51,7 +51,7 @@ _ATT_ () {
 					_NAND_
 				fi
 			fi
-		# https://stackoverflow.com/questions/3685970/check-if-a-bash-array-contains-a-value
+		# check if bash array contains a value
 		elif [[ -f "${NAME##*/}.${COMMIT::7}.tar.gz" ]] && [[ ! "${F1AR[@]}" =~ "${NAME##*/}" ]] # tarfile exists and directory does not exist
 		then
 			_AND_
@@ -88,10 +88,10 @@ _BUILDAPKS_ () { # https://developer.github.com/v3/repos/commits/
 _CKAT_ () {
 	_MKJDC_ 
 	CK=0
-	REPO=$(awk -F/ '{print $NF}' <<< "$NAME") # https://stackoverflow.com/questions/2559076/how-do-i-redirect-output-to-a-variable-in-shell 
+	REPO=$(awk -F/ '{print $NF}' <<< "$NAME") # redirect output to a variable 
 	if ! grep -iw "$REPO" "$RDR"/var/db/ANAMES # repository name is not found in ANAMES file
 	then	# process copy and build repository 
-		NPCK="$(find "$JDR/var/conf/" -name "$USER.${NAME##*/}.???????.ck")" ||: # https://stackoverflow.com/questions/6363441/check-if-a-file-exists-with-wildcard-in-shell-script
+		NPCK="$(find "$JDR/var/conf/" -name "$USER.${NAME##*/}.???????.ck")" ||: # check if file exists with wildcards
 		for CKFILE in "$NPCK" 
 		do
 		 	if [[ $CKFILE = "" ]] # configuration file is not found
@@ -240,7 +240,7 @@ _FJDX_ () {
 
 _GC_ () { 
 	if [[ "$OAUT" != "" ]] # see .conf/GAUTH file for information  
-	then # https://unix.stackexchange.com/questions/117992/download-only-first-few-bytes-of-a-source-page
+	then # download only first few bytes of a source page
 	 	curl --fail --retry 2 -u "$OAUT" https://api.github.com/repos/"$USER/$REPO"/commits -s 2>&1 | head -n 3 | tail -n 1 | awk '{ print $2 }' | sed 's/"//g' | sed 's/,//g' 
 	else
 	 	curl --fail --retry 2 https://api.github.com/repos/"$USER/$REPO"/commits -s 2>&1 | head -n 3 | tail -n 1 | awk '{ print $2 }' | sed 's/"//g' | sed 's/,//g' 
@@ -286,12 +286,12 @@ _MAINGITHUB_ () {
 	_WAKELOCK_
 	_GETREPOS_
 	_PRINTJS_
-	JARR=($(grep -B 5 -e JavaScript -e Java -e Shell -e Kotlin "$JDR/repos" | grep svn_url | awk -v x=2 '{print $x}' | sed 's/\,//g' | sed 's/\"//g')) ||: # creates array of Java language repositories	
+	JARR=($(grep -B 5 -e Java -e JavaScript -e Shell -e Kotlin "$JDR/repos" | grep svn_url | awk -v x=2 '{print $x}' | sed 's/\,//g' | sed 's/\"//g')) ||: # create array of Java, JavaScript, Shell and Kotlin Java language repositories	
 	_PRINTJD_
 	if [[ "${JARR[@]}" == *ERROR* ]]
 	then
 		_NAMESMAINBLOCK_ CNAMES ZNAMES
-		_SIGNAL_ "404" "search for Java language repositories" "4"
+		_SIGNAL_ "404" "search for Java, JavaScript, Shell and Kotlin language repositories" "4"
 	fi
 	F1AR=($(find "$JDR" -maxdepth 1 -type d)) # creates array of JDR contents 
 	cd "$JDR"
@@ -313,7 +313,7 @@ _MAINGITHUB_ () {
 _NAND_ () { # write configuration file for repository if AndroidManifest.xml file is NOT found in git repository
 	printf "%s\\n" "$COMMIT" > "$JDR/var/conf/$USER.${NAME##*/}.${COMMIT::7}.ck"
 	printf "%s\\n" "1" >> "$JDR/var/conf/$USER.${NAME##*/}.${COMMIT::7}.ck"
-	printf "\\n%s\\n\\n" "Could not find an AndroidManifest.xml file in Java, Kotlin or Shell language repository $USER ${NAME##*/} ${COMMIT::7}:  NOT downloading ${NAME##*/} tarball."
+	printf "\\n%s\\n\\n" "Could not find an AndroidManifest.xml file in Java, Javascript, Kotlin or Shell language repository $USER ${NAME##*/} ${COMMIT::7}:  NOT downloading ${NAME##*/} tarball."
 }
 
 _PRINTAS_ () {
@@ -334,7 +334,7 @@ _PRINTJD_ () {
 }
 
 _PRINTJS_ () {
-	printf "\\n\\e[1;34mSearching for Java, Kotlin and Shell language repositories: "'\033]2;Searching for Java, Kotlin and Shell language repositories: OK\007'
+	printf "\\n\\e[1;34mSearching for Java, Javascript, Kotlin and Shell language repositories: "'\033]2;Searching for Java, Javascript, Kotlin and Shell language repositories: OK\007'
 }
 
 _SIGNAL_ () {

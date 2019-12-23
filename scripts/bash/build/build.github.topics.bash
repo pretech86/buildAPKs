@@ -65,7 +65,7 @@ then
 	fi
 	rm -f "$JDR/topic.tmp"
 fi
-TARR=($(grep -v JavaScript "$JDR"/topic | grep -B 5 Java | grep svn_url | awk -v x=2 '{print $x}' | sed 's/\,//g' | sed 's/\"//g' | sed 's/https\:\/\/github.com\///g' | cut -d\/ -f1)) # creates array of Java language repositories for topic
+TARR=($(grep -B 5 -e Java -e JavaScript -e Shell -e Kotlin "$JDR/topic" | grep svn_url | awk -v x=2 '{print $x}' | sed 's/\,//g' | sed 's/\"//g' | sed 's/https\:\/\/github.com\///g' | cut -d\/ -f1)) ||: # create array of Java, JavaScript, Shell and Kotlin Java language repositories	
 for NAME in "${TARR[@]}" 
 do 
  	"$RDR"/scripts/bash/build/build.github.bash "$NAME"
