@@ -6,13 +6,13 @@
 
    1. Definitions.
 
-      "License" shall mean the terms and conditions for use, reproduction,
+      "License" will mean the terms and conditions for use, reproduction,
       and distribution as defined by Sections 1 through 9 of this document.
 
-      "Licensor" shall mean the copyright owner or entity authorized by
+      "Licensor" will mean the copyright owner or entity authorized by
       the copyright owner that is granting the License.
 
-      "Legal Entity" shall mean the union of the acting entity and all
+      "Legal Entity" will mean the union of the acting entity and all
       other entities that control, are controlled by, or are under common
       control with that entity. For the purposes of this definition,
       "control" means (i) the power, direct or indirect, to cause the
@@ -20,32 +20,32 @@
       otherwise, or (ii) ownership of fifty percent (50%) or more of the
       outstanding shares, or (iii) beneficial ownership of such entity.
 
-      "You" (or "Your") shall mean an individual or Legal Entity
+      "You" (or "Your") will mean an individual or Legal Entity
       exercising permissions granted by this License.
 
-      "Source" form shall mean the preferred form for making modifications,
+      "Source" form will mean the preferred form for making modifications,
       including but not limited to software source code, documentation
       source, and configuration files.
 
-      "Object" form shall mean any form resulting from mechanical
+      "Object" form will mean any form resulting from mechanical
       transformation or translation of a Source form, including but
       not limited to compiled object code, generated documentation,
       and conversions to other media types.
 
-      "Work" shall mean the work of authorship, whether in Source or
+      "Work" will mean the work of authorship, whether in Source or
       Object form, made available under the License, as indicated by a
       copyright notice that is included in or attached to the work
       (an example is provided in the Appendix below).
 
-      "Derivative Works" shall mean any work, whether in Source or Object
+      "Derivative Works" will mean any work, whether in Source or Object
       form, that is based on (or derived from) the Work and for which the
       editorial revisions, annotations, elaborations, or other modifications
       represent, as a whole, an original work of authorship. For the purposes
-      of this License, Derivative Works shall not include works that remain
+      of this License, Derivative Works will not include works that remain
       separable from, or merely link (or bind by name) to the interfaces of,
       the Work and Derivative Works thereof.
 
-      "Contribution" shall mean any work of authorship, including
+      "Contribution" will mean any work of authorship, including
       the original version of the Work and any modifications or additions
       to that Work or Derivative Works thereof, that is intentionally
       submitted to Licensor for inclusion in the Work by the copyright owner
@@ -59,7 +59,7 @@
       excluding communication that is conspicuously marked or otherwise
       designated in writing by the copyright owner as "Not a Contribution."
 
-      "Contributor" shall mean Licensor and any individual or Legal Entity
+      "Contributor" will mean Licensor and any individual or Legal Entity
       on behalf of whom a Contribution has been received by Licensor and
       subsequently incorporated within the Work.
 
@@ -83,7 +83,7 @@
       cross-claim or counterclaim in a lawsuit) alleging that the Work
       or a Contribution incorporated within the Work constitutes direct
       or contributory patent infringement, then any patent licenses
-      granted to You under this License for that Work shall terminate
+      granted to You under this License for that Work will terminate
       as of the date such litigation is filed.
 
    4. Redistribution. You may reproduce and distribute copies of the
@@ -129,9 +129,9 @@
 
    5. Submission of Contributions. Unless You explicitly state otherwise,
       any Contribution intentionally submitted for inclusion in the Work
-      by You to the Licensor shall be under the terms and conditions of
+      by You to the Licensor will be under the terms and conditions of
       this License, without any additional terms or conditions.
-      Notwithstanding the above, nothing herein shall supersede or modify
+      Notwithstanding the above, nothing herein will supersede or modify
       the terms of any separate license agreement you may have executed
       with Licensor regarding such Contributions.
 
@@ -153,7 +153,7 @@
    8. Limitation of Liability. In no event and under no legal theory,
       whether in tort (including negligence), contract, or otherwise,
       unless required by applicable law (such as deliberate and grossly
-      negligent acts) or agreed to in writing, shall any Contributor be
+      negligent acts) or agreed to in writing, will any Contributor be
       liable to You for damages, including any direct, indirect, special,
       incidental, or consequential damages of any character arising as a
       result of this License or out of the use or inability to use the
