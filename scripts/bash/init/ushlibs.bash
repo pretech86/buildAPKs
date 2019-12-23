@@ -19,7 +19,7 @@ _IFSHLIBS_() {
 	fi
 }
 
-_IRGR_() { # https://stackoverflow.com/questions/53977052/how-to-properly-initialize-a-remote-git-repository 
+_IRGR_() { # initialize a remote git repository 
 		local USER="BuildAPKs"
 		local HOSTIP="github.com"
 		local PROJECT="buildAPKs"

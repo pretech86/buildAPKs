@@ -133,19 +133,28 @@ else # do not load artifacts and libraries into the build process.
 	JSJCLASSPATH=""
 fi
 NOW=$(date +%s)
-MSDKVERSIO="$(getprop ro.build.version.min_supported_target_sdk)" || printf "%s" "signal ro.build.version.min_supported_target_sdk ${0##*/} build.one.bash generated; Continuing...  "
-MSDKVERSION="${MSDKVERSIO:-14}"
 PKGNAM="$(grep -o "package=.*" AndroidManifest.xml | cut -d\" -f2)"
 PKGNAME="$PKGNAM.$NOW"
-TSDKVERSIO="$(getprop ro.build.version.sdk)" || printf "%s" "Signal ro.build.version.sdk ${0##*/} build.one.bash generated; Continuing...  "
-TSDKVERSION="${TSDKVERSIO:-23}"
+COMMANDIF="$(command -v getprop)" ||:
+if [[ "$COMMANDIF" = "" ]]
+then
+	MSDKVERSION="14"
+ 	PSYSLOCAL="en"
+	TSDKVERSION="23"
+else
+	MSDKVERSIO="$(getprop ro.build.version.min_supported_target_sdk)" || printf "%s" "signal ro.build.version.min_supported_target_sdk ${0##*/} build.one.bash generated; Continuing...  "
+	MSDKVERSION="${MSDKVERSIO:-14}"
+ 	PSYSLOCAL="$(getprop persist.sys.locale|awk -F- '{print $1}')"
+	TSDKVERSIO="$(getprop ro.build.version.sdk)" || printf "%s" "Signal ro.build.version.sdk ${0##*/} build.one.bash generated; Continuing...  "
+	TSDKVERSION="${TSDKVERSIO:-23}"
+fi
 sed -i "s/minSdkVersion\=\"[0-9]\"/minSdkVersion\=\"$MSDKVERSION\"/g" AndroidManifest.xml 
 sed -i "s/minSdkVersion\=\"[0-9][0-9]\"/minSdkVersion\=\"$MSDKVERSION\"/g" AndroidManifest.xml 
 sed -i "s/targetSdkVersion\=\"[0-9]\"/targetSdkVersion\=\"$TSDKVERSION\"/g" AndroidManifest.xml 
 sed -i "s/targetSdkVersion\=\"[0-9][0-9]\"/targetSdkVersion\=\"$TSDKVERSION\"/g" AndroidManifest.xml 
 printf "\\e[1;38;5;115m%s\\n\\e[0m" "aapt: started..."
 aapt package -f \
- 	--min-sdk-version "$MSDKVERSION" --target-sdk-version "$TSDKVERSION" --version-code "$NOW" --version-name "$PKGNAM" -c "$(getprop persist.sys.locale|awk -F- '{print $1}')" \
+ 	--min-sdk-version "$MSDKVERSION" --target-sdk-version "$TSDKVERSION" --version-code "$NOW" --version-name "$PKGNAM" -c "$PSYSLOCAL" \
 	-M AndroidManifest.xml \
  	$AAPTENT \
 	-J gen \
