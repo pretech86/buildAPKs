@@ -7,14 +7,15 @@ set -Eeuo pipefail
 shopt -s nullglob globstar
 . "$RDR"/scripts/bash/init/atrap.bash 137 138 139 "${0##*/} ushlibs.bash" 
 _IFSHLIBS_() { 
+	_ADB_
 	if [[ ! -d "$RDR"/scripts/bash/shlibs ]] 
 	then
-		git clone https://github.com/shlibs/shlibs.bash scripts/bash/shlibs || printf "\\nCannot clone module %s into~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.bash" "${RDR##*/}"
+		git clone https://github.com/shlibs/shlibs.bash scripts/bash/shlibs || printf "\\nCannot clone module %s into ~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.bash" "${RDR##*/}"
 		sleep 0.$(shuf -i 24-72 -n 1) # add network latency support on fast networks 
 	fi
 	if [[ ! -d "$RDR"/scripts/sh/shlibs ]] 
 	then
-		git clone https://github.com/shlibs/shlibs.sh scripts/sh/shlibs || printf "\\nCannot clone module %s into~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.sh" "${RDR##*/}"
+		git clone https://github.com/shlibs/shlibs.sh scripts/sh/shlibs || printf "\\nCannot clone module %s into ~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.sh" "${RDR##*/}"
 		sleep 0.$(shuf -i 24-72 -n 1) # increase network latency support on fast networks 
 	fi
 }
@@ -25,6 +26,14 @@ _IRGR_() { # initialize a remote git repository
 		local PROJECT="buildAPKs"
 		git init 
 		git remote add origin ssh://${USER}@${HOSTIP}${PROJECT}.git
+}
+
+_ADB_() { # add database submodule
+	if [[ ! -d "$RDR"/opt/db ]] 
+	then
+		git submodule add https://github.com/BuildAPKs/db.BuildAPKs opt/db || printf "\\nCannot add module %s into ~/%s/opt/db: Continuing...\\n\\n" "https://github.com/BuildAPKs/db.BuildAPKs" "${RDR##*/}"
+		sleep 0.$(shuf -i 24-72 -n 1) # add network latency support on fast networks 
+	fi
 }
 
 _UFSHLIBS_() { # add and update submodules 
@@ -47,6 +56,7 @@ _UFSHLIBS_() { # add and update submodules
 		sleep 0.$(shuf -i 24-72 -n 1) # increase network latency support on fast networks 
 		fi
 	done
+	_ADB_
 }
 
 cd "$RDR"
