@@ -17,7 +17,7 @@ _IFSHLIBS_() {
 		git clone https://github.com/shlibs/shlibs.sh scripts/sh/shlibs || printf "\\nCannot clone module %s into ~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.sh" "${RDR##*/}"
 		sleep 0.$(shuf -i 24-72 -n 1) # increase network latency support on fast networks 
 	fi
-	_ADB_
+	_ADBGH_
 }
 
 _IRGR_() { # initialize a remote git repository 
@@ -28,7 +28,7 @@ _IRGR_() { # initialize a remote git repository
 		git remote add origin ssh://${USER}@${HOSTIP}${PROJECT}.git
 }
 
-_ADB_() { # add database submodule
+_ADBGH_() { # add database and github submodules
 	[ ! -d "$RDR"/opt/db ] && git submodule add https://github.com/BuildAPKs/db.BuildAPKs opt/db && sleep 0.$(shuf -i 24-72 -n 1) || printf "\\nCannot add module %s into ~/%s/opt/db: Continuing...\\n\\n" "https://github.com/BuildAPKs/db.BuildAPKs" "${RDR##*/}"
 	[ ! -d "$RDR"/scripts/bash/github ] && git submodule add https://github.com/BuildAPKs/buildAPKs.github scripts/bash/github && sleep 0.$(shuf -i 24-72 -n 1) || printf "\\nCannot add module %s into ~/%s/scripts/bash/github: Continuing...\\n\\n" "https://github.com/BuildAPKs/db.BuildAPKs" "${RDR##*/}"
 }
@@ -53,7 +53,7 @@ _UFSHLIBS_() { # add and update submodules
 		sleep 0.$(shuf -i 24-72 -n 1) # increase network latency support on fast networks 
 		fi
 	done
-	_ADB_
+	_ADBGH_
 }
 
 cd "$RDR"
