@@ -7,7 +7,6 @@ set -Eeuo pipefail
 shopt -s nullglob globstar
 . "$RDR"/scripts/bash/init/atrap.bash 137 138 139 "${0##*/} ushlibs.bash" 
 _IFSHLIBS_() { 
-	_ADB_
 	if [[ ! -d "$RDR"/scripts/bash/shlibs ]] 
 	then
 		git clone https://github.com/shlibs/shlibs.bash scripts/bash/shlibs || printf "\\nCannot clone module %s into ~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.bash" "${RDR##*/}"
@@ -18,6 +17,7 @@ _IFSHLIBS_() {
 		git clone https://github.com/shlibs/shlibs.sh scripts/sh/shlibs || printf "\\nCannot clone module %s into ~/%s/scripts/bash/shlibs: Continuing...\\n\\n" "https://github.com/shlibs/shlibs.sh" "${RDR##*/}"
 		sleep 0.$(shuf -i 24-72 -n 1) # increase network latency support on fast networks 
 	fi
+	_ADB_
 }
 
 _IRGR_() { # initialize a remote git repository 
@@ -29,11 +29,8 @@ _IRGR_() { # initialize a remote git repository
 }
 
 _ADB_() { # add database submodule
-	if [[ ! -d "$RDR"/opt/db ]] 
-	then
-		git submodule add https://github.com/BuildAPKs/db.BuildAPKs opt/db || printf "\\nCannot add module %s into ~/%s/opt/db: Continuing...\\n\\n" "https://github.com/BuildAPKs/db.BuildAPKs" "${RDR##*/}"
-		sleep 0.$(shuf -i 24-72 -n 1) # add network latency support on fast networks 
-	fi
+	[ ! -d "$RDR"/opt/db ] && git submodule add https://github.com/BuildAPKs/db.BuildAPKs opt/db && sleep 0.$(shuf -i 24-72 -n 1) || printf "\\nCannot add module %s into ~/%s/opt/db: Continuing...\\n\\n" "https://github.com/BuildAPKs/db.BuildAPKs" "${RDR##*/}"
+	[ ! -d "$RDR"/scripts/bash/github ] && git submodule add https://github.com/BuildAPKs/buildAPKs.github scripts/bash/github && sleep 0.$(shuf -i 24-72 -n 1) || printf "\\nCannot add module %s into ~/%s/scripts/bash/github: Continuing...\\n\\n" "https://github.com/BuildAPKs/db.BuildAPKs" "${RDR##*/}"
 }
 
 _UFSHLIBS_() { # add and update submodules 
