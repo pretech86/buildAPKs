@@ -127,7 +127,7 @@ then # load artifacts and libraries into the build process.
  	ECJENT=" -classpath $BOOTCLASSPATH "
 	printf "\\e[1;32m\\bDONE\\e[0m\\n"
 else # do not load artifacts and libraries into the build process.
-	printf "\\e[1;34m%s\\n" "File ~/"${RDR##*/}"/.conf/LIBAUTH has information regarding the automation of integrating artifacts and libraries into the compilation. The functionality of this option is being enhanced. See https://github.com/BuildAPKs/buildAPKs/issues and https://github.com/BuildAPKs/buildAPKs/pulls to improve this automation.  "
+	printf "\\e[1;34m%s\\n" "File ~/"${RDR##*/}"/.conf/LIBAUTH has information regarding the integration artifacts and libraries into the compilation. The functionality of this option is being enhanced. See https://github.com/BuildAPKs/buildAPKs/issues and https://github.com/BuildAPKs/buildAPKs/pulls to improve this automation.  "
  	AAPTENT=""
  	ECJENT=""
 	JSJCLASSPATH=""
